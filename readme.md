@@ -8,7 +8,7 @@ Currently the standard supports pixel-based collections. We anticipate supportin
 
 ## Context
 
-As the Ordinals protocol gains traction, fungible token inscriptions have greatly increased the demand for blockspace on the Bitcoin network. This has led to abnormally high fees, which disproportionally affect ordinals art creators and collectors, because image inscriptions are larger than text inscriptions such as those used to buy and sell fungible tokens. This has forcing ordinal collection creators to delay or cancel plans for ordinals collections, and discourages creators from entering the Bitcoin space. In order to continue encouraging creators to launch innovative collection on the Bitcoin blockchain, we propose a new approach for launching pixel art ordinal collections.
+As the Ordinals protocol gains traction, fungible token inscriptions (most notably BRC-20) have greatly increased the demand for blockspace on the Bitcoin network. This has led to abnormally high fees, which disproportionally affect ordinals art creators and collectors, because image inscriptions are larger than text inscriptions such as those used to buy and sell fungible tokens. This has forcing ordinal collection creators to delay or cancel plans for ordinals collections, and discourages creators from entering the Bitcoin space. In order to continue encouraging creators to launch innovative collection on the Bitcoin blockchain, we propose a new approach for launching pixel art ordinal collections.
 
 ---
 
@@ -36,44 +36,43 @@ The deploy inscription can optionally include the coordinates of the traits, whi
 
 ```javascript
 {
-    "p":"brc333",
-    "op":"deploy",
-    "collection":{
-      "slug":"owlinals-test",
-      "name":"Owlinals",
-      "description":"Owlinals Testing Collection",
-      "creator":"@shiftshapr",
-      "supply":333
+    "p": "brc333",
+    "op": "deploy",
+    "collection": {
+        "slug": "owlinals-test",
+        "name": "Owlinals",
+        "description": "Owlinals Testing Collection",
+        "creator": "@shiftshapr",
+        "supply": 333
     },
-    colors = {
-      "0": ["#1E3E5F", "#5D374B", "#442746", ... , "#0B5876"],
-      "1": ["#8084CE", "#9A8DFA", ..., "#9C66F1"],
-      "2": ["#695025", ... , "#6C4B09"],
-      "3": ["#000000", "#FFFFFF", "#FF4040"],
-     // ... More color palletes
-      "7": ["#000000", "#F656565", "#000080"]
+    "colors": {
+        "0": ["#1E3E5F", "#5D374B", "#442746", "#0B5876"],
+        "1": ["#8084CE", "#9A8DFA", "#9C66F1"],
+        "2": ["#695025", "#6C4B09"],
+        // more trait colors - each trait can have up to 10 colors 
+        "13": ["#000000", "#FFFFFF", "#FF4040"]
     },
-    coordinates = {
+    "coordinates": [
         {
             "name": "beak",
             "coordinates": [
-                {"x":19,"y":15},{"x":19,"y":16},{"x":18,"y":17},{"x":19,"y":17},{"x":20,"y":17},{"x":19,"y":18},{"x":19,"y":19}
+                {"x": 19, "y": 15}, {"x": 19, "y": 16}, {"x": 18, "y": 17}, {"x": 19, "y": 17}, {"x": 20, "y": 17}, {"x": 19, "y": 18}, {"x": 19, "y": 19}
             ]
         },
         {
             "name": "pupil right",
             "coordinates": [
-                {"x":15,"y":15}
+                {"x": 15, "y": 15}
             ]
         },
-        // more coordinates
+        // and more trait coordinates to match the number of trait colors - each trait can have as many coordinates as necessary... 
         {
             "name": "pupil left",
             "coordinates": [
-                {"x":23,"y":15}
+                {"x": 23, "y": 15}
             ]
         }
-    }
+    ]
 }
 ```
 
@@ -99,61 +98,41 @@ Again building on BRC69, we propose a versatile compile logic.
 {
   "p": "brc33",
   "op": "compile",
-  "s": "owlinals"
+  "s": "owlinals_test"
 }
 */
 
-// EDIT
+
+// EDIT 
 const collectionJsonUrl = '/content/<deploy inscription id>';
-const previewUrl = `/content/<preview inscription id>`; // if preview available
+const baseJsonUrl = '/content/<coordinates inscription id>';
 const imageRendering = 'pixelated';
 const renderSize = { width: 500, height: 500 }; // select image render size
 
-async function loadImage (url) {
-    return new Promise((resolve, reject) => {
-        const image = document.createElement('img');
-        image.src = url;
-        image.crossOrigin = 'anonymous';
-        image.onload = () => {
-            resolve(image);
-        }
-        image.onerror = () => {
-            // Some display fallbacks for when the image fails to load
-            if (!image.src.startsWith('https://')) {
-                image.src = 'https://ordinals.com' + url;
-            } else if (image.src.startsWith('https://ordinals.com')) {
-                image.src = 'https://ord-mirror.magiceden.dev' + url;
-            }
-        }
-    })
-}
-
-async function renderImage(imageEl, urls) {
+function generateArt(imageEl, traitColors, baseCoordinates, allColors) {
     const canvas = document.createElement('canvas');
-    canvas.width = renderSize.width;
-    canvas.height = renderSize.height;
+    canvas.width = 30;
+    canvas.height = 30;
 
-    const ctx = canvas.getContext("2d");
+    const ctx = canvas.getContext('2d');
     ctx.imageSmoothingEnabled = false;
 
-    const images = await Promise.all((urls).map(loadImage))
-    images.forEach(_ => ctx.drawImage(_, 0, 0, canvas.width, canvas.height))
-    imageEl.src = canvas.toDataURL("image/png")
-}
-
-async function getAllTraits(traitsUrl, retry = false) {
-    try {
-        const collectionMetadataRes = await fetch(traitsUrl);
-        const collectionMetadata = await collectionMetadataRes.json();
-        return collectionMetadata.attributes.map(_ => `/content/${_}`);
-    } catch (e) {
-        if (!retry) {
-            const timestamp = Math.floor(Date.now() / (60000 * 10)) // 10 minutes
-            const newTraitsUrl = `${traitsUrl}?timestamp=${timestamp}`;
-            return getAllTraits(newTraitsUrl, true);
+    for (const [traitIndex, colorValue] of Object.entries(traitColors)) {
+        let color = colorValue;
+        if (baseCoordinates[traitIndex] && Array.isArray(baseCoordinates[traitIndex].coordinates) && color !== undefined) {
+            ctx.fillStyle = color;
+            for (const pixel of baseCoordinates[traitIndex].coordinates) {
+                ctx.fillRect(pixel.x - 1, pixel.y - 1, 1, 1);
+            }
         }
-        throw e;
     }
+
+    imageEl.src = canvas.toDataURL("image/png");
+    console.log(imageEl.src);
+
+    // Set the image size to renderSize
+    imageEl.style.width = renderSize.width + 'px';
+    imageEl.style.height = renderSize.height + 'px';
 }
 
 function createInitialImage () {
@@ -169,39 +148,46 @@ function createInitialImage () {
     img.style.objectFit = 'contain';
     img.style.imageRendering = imageRendering;
 
+    // Append the image to the body
+    document.body.appendChild(img);
+
     return img
 }
 
-async function createInscriptionHtml() {
-    const imageEl = createInitialImage()
-
+async function getMetadata(url, retry = false) {
     try {
-        // Get traits
-        const allTraits = await getAllTraits(collectionJsonUrl)
-
-        // Process traits
-        const selectedTraitIndexes = document.querySelector('script[t]').getAttribute('t').split(',');  //FIX THIS  
-        const traits = selectedTraitIndexes.map(_ => allTraits[+_]);
-
-        // Render traits
-        await renderImage(imageEl, traits);
+        const collectionMetadataRes = await fetch(url);
+        return await collectionMetadataRes.json();
     } catch (e) {
-        console.error(e)
-
-        // Render previewUrl image
-        if (previewUrl) {
-            imageEl.src = previewUrl;
+        if (!retry) {
+            const timestamp = Math.floor(Date.now() / (60000 * 10)) // 10 minutes
+            const newUrl = `${url}?timestamp=${timestamp}`
+            return getMetadata(newUrl, true)
         }
-    } finally {
-        // Append the <img> tag to the <body>
-        document.body.appendChild(imageEl);
+        throw e
     }
 }
 
-window.onload = function() {
-    createInscriptionHtml();
-}
+window.onload = async function() {
+    const imageEl = createInitialImage();
 
+    try {
+        const jsonColorData = await getMetadata(collectionJsonUrl);
+        const allColors = jsonColorData.colors;
+        const jsonCoordinateData = await getMetadata(baseJsonUrl);
+        const baseCoordinates = jsonCoordinateData.coordinates;
+        
+        const inputString = document.querySelector('script[t]').getAttribute('t');
+        
+        const selectedColorIndexes = Array.from(inputString).map(char => Number(char));
+        const traitColors = selectedColorIndexes.map((selectedColor, i) => allColors[i] ? allColors[i][selectedColor] : null);
+
+        generateArt(imageEl,traitColors,baseCoordinates,allColors);
+
+    } catch (e) {
+        console.error(e);
+    }
+};
 ``````
 
 ### Mint BRC69
@@ -209,14 +195,14 @@ window.onload = function() {
 The Mint operation uses an HTML inscription that stores the index of the traits used to generate the final asset and points back to the Compile inscription, in a single line. This approach allows any front-end that supports recursive inscriptions to automatically render the image using on-chain color palette data. These mint scripts can be created by a generator script, enabling users to choose their own traits and customize the image rendering.
 
 ``````html
-<script t="9123" src="/content/<compile inscription id>" m='{"p":"brc333" "op":"mint" "s":"owlinals" "id":"0"}' ></script>
+<script t="9123312324423" src="/content/<compile inscription id>" m='{"p":"brc333" "op":"mint" "s":"owlinals" "id":"0"}' ></script>
 ``````
 
 | Key  | Required | Description                                                  |
 | ---- | -------- | ------------------------------------------------------------ |
-| t    | YES      | Traits: index of the traits used to generate the asset found in the "attributes" array of the deploy inscription |
+| t    | YES      | Traits: string describing the traits used to generate the asset using trait colors and trait coordinates |
 | src  | YES      | Source: Recursive inscription pointer to the Compile inscription |
-| m    | NO       | Metadata: metadata used to track BRC333 operations. Optional if you want your mints operation to be stealth |
+| m    | NO       | Metadata: metadata used to track BRC333 operations. Optional if you want your mints operation to be stealth. |
 
 ---
 
