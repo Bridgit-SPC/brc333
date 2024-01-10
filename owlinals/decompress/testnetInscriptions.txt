@@ -1,0 +1,131 @@
+! ! !alexso777 — 01/06/2024 2:32 PM
+
+https://testnet.ordinals.com/inscription/93c0f3d76d98eb43e70c5595eefafd90732d7b712113dc8cb10ad940430cff40i0
+Inscription 754952
+
+
+https://testnet.ordinals.com/inscription/4972dd0e391ace8060e7be3839047c8f5b21fd45f4c1d4cbf0152a0a3d548791i0
+Inscription 754967
+
+https://testnet.ordinals.com/inscription/c978e24deb1d3b93628d16b66a71571cf8c526b5d34093c745a697351b92bdc7i0
+
+shiftshapr — 01/08/2024 10:42 AM
+I did not work but I have already fixed that problem for production. I needed to alter the script to accomodate the decompression. If you have time now I will resent the second to last one and we can try the new version..
+
+! ! !alexso777 — 01/08/2024 11:19 AM
+https://testnet.ordinals.com/inscription/5cb8d2d1dde6b8be317c6f6490cf4bdb4f8d1ac255248225e88b00629740c0bfi0
+Inscription 760302
+
+
+! ! !alexso777 — 01/08/2024 12:47 PM
+https://testnet.ordinals.com/inscription/35c7a8b160ff5b940c7738a8c7901c9988ea27c52767612bfa3edbac219e212ci0
+Inscription 760333
+Image
+
+Uncaught (in promise) TypeError: Failed to resolve module specifier '/content/93c0f3d76d98eb43e70c5595eefafd90732d7b712113dc8cb10ad940430cff40i0'. The base URL is about:blank because import() is called from a CORS-cross-origin script.
+    at decompressAndExecute (5cb8d2d1dde6b8be317c6f6490cf4bdb4f8d1ac255248225e88b00629740c0bfi0:10:17)
+    at 5cb8d2d1dde6b8be317c6f6490cf4bdb4f8d1ac255248225e88b00629740c0bfi0:15:3 
+! ! !alexso777 — 01/08/2024 12:55 PM
+Bummer!  I got this error on mainnet too, so I wasted $120. And I need to inscribe the full big file. Looks like it will be $400 😦  Unless I could get it to work with out the import. I will try something else... Hmm
+
+0823bf516781212ada628e388fb57053da7991a77c37512057714ff57b4c71dei0:9 Uncaught (in promise) TypeError: Failed to resolve module specifier '/content/fba6f95fb1152db43304a27dce8cb8c65509eba6ab0b6958cedeb33e5f443077i0'. The base URL is about:blank because import() is called from a CORS-cross-origin script.
+    at decompressAndExecute (0823bf516781212ada628e388fb57053da7991a77c37512057714ff57b4c71dei0:9:18)
+    at 0823bf516781212ada628e388fb57053da7991a77c37512057714ff57b4c71dei0:14:1
+
+
+I am super confused. Maybe you can help me solve this. It is really bothering me.  Here is the inscription I just did: https://www.ord.io/53822471
+
+Which calls the logic file that I compressed with Pako which is listed as a recursive module on the previous page:
+https://www.ord.io/53817366
+
+I get the above error on mainnet. This is the statement that is causing the error:
+
+  const pako = await import('/content/fba6f95fb1152db43304a27dce8cb8c65509eba6ab0b6958cedeb33e5f443077i0'); 
+
+Yet this is the approach that is used by other inscriptions. 
+
+e.g., this is taken from another inscription used by on chain monkey. Looks exactly the same to me:
+ const pako = await import('/content/fba6f95fb1152db43304a27dce8cb8c65509eba6ab0b6958cedeb33e5f443077i0');
+
+(And I believe that one is being called by a script as well.)
+
+Here are a list of inscriptions that mention pako:
+https://studio.geniidata.com/query/90491
+
+Can you help me understand why it is not working for ours?
+
+Inscription 53,822,471 | Ord.io
+
+Inscription 53,817,366 | Ord.io
+
+
+
+Thanks for taking a look at it... It certainly has me puzzled...
+
+E.g., this one ord.io/523cbe494d52b1ed6d24180d9066c2fe53f560b00576ee3bf4e2a8d05df9d19fi0
+
+is called by this htm file...
+
+19d46d37a1ab2da2c783498ae6f28ec1532817d78861eec79d218104f7c713d5i0
+
+Does not get CORS error.
+
+shiftshapr — Yesterday at 4:52 AM
+This is so weird. Look at this : https://static.unisat.io/inscription/content/a555dd2c7e6e97487b83ab768330fd6cbcbf313d9a79075c019b11775b32c83ai0
+! ! !alexso777 — Yesterday at 4:53 AM
+what is this?
+shiftshapr — Yesterday at 4:59 AM
+This is the inscription - the owl egg. It works with that link which is content link on the Unisat page:
+https://unisat.io/inscription/a555dd2c7e6e97487b83ab768330fd6cbcbf313d9a79075c019b11775b32c83ai0. Go to that page, then scroll down and click on Content: link. 
+
+Do you think the Ordicord tech support could help?
+
+UniSat Wallet
+UniSat Wallet - the first open-source browser extension wallet for Bitcoin NFTs!
+! ! !alexso777 — Yesterday at 5:00 AM
+is this one you inscribed on mainnet?
+and the content link works but main page does not work?
+! ! !alexso777 — Yesterday at 5:00 AM
+yes i think they can help
+
+! ! !alexso777 — Yesterday at 5:48 AM
+https://testnet.ordinals.com/inscription/21db7e13386fef4f32ef92aa30eca4425781aaaf5a17950707bc7a76c74a71a4i0
+
+shiftshapr — Yesterday at 6:01 AM
+Ok, got another error.
+
+Error loading pako: SyntaxError: Unexpected token 'export'
+    at 4fdabd0c809b667c152a84a23bb1fc1f0e191a4d7ed6a6067b0cbb5531ff82d2i0:13:11
+
+
+! ! !alexso777 — Yesterday at 6:53 AM
+https://testnet.ordinals.com/inscription/8df0262bf51ed97998fba1b52f74fb3ef466e4bb039c9f9f61b9d3f32fd88a91i0
+
+
+https://testnet.ordinals.com/inscription/3c10914692e142b53fea0130d7602b5b598c6870ff026575fa847649080f00b0i0
+
+
+shiftshapr — Yesterday at 9:12 AM
+before that it says 404 error for this url: https://testnet.ordinals.com/content/fba6f95fb1152db43304a27dce8cb8c65509eba6ab0b6958cedeb33e5f443077i0
+Apologies. Looks like i mixed up the mainnet Pako library with the testnet library... That's why 404 and why Pako was undefined. Its confusing with all these versions.
+
+Tested this one: https://testnet.ordinals.com/content/93c0f3d76d98eb43e70c5595eefafd90732d7b712113dc8cb10ad940430cff40i0... So the file 
+
+! ! !alexso777 — Yesterday at 9:45 AM
+https://testnet.ordinals.com/inscription/32d0564677d4ec3276a2ad0158c64f87868f52094a7cca0383863bcbc747dca7i0
+
+! ! !alexso777 — Yesterday at 10:34 AM
+https://testnet.ordinals.com/inscription/cf09a67d43d7624e4985ef0203742cc471f8c7d7f1cf3d927e96796df8685e83i0
+Image
+😦
+
+@shiftshapr
+
+shiftshapr — Yesterday at 4:42 PM
+OK this is the spam my arse inscription that uses Pako and works:
+https://www.ord.io/53123428
+sma_mint.htm is the version that minted (removed references to http://ordinals.com/)
+
+Note that there are transformations that need to happen for the script to after decompression. I had to change them to get them to actually work.
+
+These transformations are in Owlinals files that have "4decomp" in their name
