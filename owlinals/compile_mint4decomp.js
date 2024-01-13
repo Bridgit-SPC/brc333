@@ -407,7 +407,7 @@ const categoryAppearanceRate = [15,15,15,0,15,15,0,15,5,0,5];
 
 const collectionJsonUrl = '/content/b78337cfe8e59a7398697fbde1f4ce726e46ed9323488681766287a53f7dba45i0';
 const baseJsonUrl = '/content/f259f3f000a20c287690ecc331d7845b5afc4514943cd3d627b055abedae8c80i0';
-const displaySize = '780px';
+const displaySize = '500px';
 const canvasSize = 30;
 
 let contextCanvas,pfpCanvas;

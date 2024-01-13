@@ -409,7 +409,7 @@ const categoryAppearanceRate = [15,15,15,0,15,15,0,15,5,0,5];
 //const baseJsonUrl = '/content/f259f3f000a20c287690ecc331d7845b5afc4514943cd3d627b055abedae8c80i0';
 const collectionJsonUrl = 'https://ordinals.com/content/b78337cfe8e59a7398697fbde1f4ce726e46ed9323488681766287a53f7dba45i0';
 const baseJsonUrl = 'https://ordinals.com/content/f259f3f000a20c287690ecc331d7845b5afc4514943cd3d627b055abedae8c80i0';
-const displaySize = '500px';
+const displaySize = '600px';
 const canvasSize = 30;
 
 let contextCanvas,pfpCanvas;
@@ -418,12 +418,17 @@ function appendStyles() {
     const style = document.createElement('style');
     style.innerHTML = `
         .image-container {
+            max-width: 100%;
+            max-height: 100%;
             width: ${displaySize};
             height: ${displaySize};
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
         canvas {
-            width: 100%;
-            height: 100%;
+            max-width: 100%;
+            max-height: 100%;
             image-rendering: pixelated;
         }
         .hidden {
