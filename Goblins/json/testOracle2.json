@@ -1,0 +1,69 @@
+{   
+    "protocol": "BRC333",
+    "operation": "oracle",
+    "description": "This is a test oracle for the BRC333 protocol.",
+    "messages":  [
+        {
+            "id": "welcome",
+            "action": "add",
+            "block": 859750,
+            "stop": 859760,
+            "image": "9259a7d8a2294e173a8e3927e97799e5cb9c4f8a48ae7aa68a073416b2f4ddb7i0",
+            "message": "Welcome to the Goblin Oracle!"
+        },
+        {
+            "id": "welcome2",
+            "action": "add",
+            "offset": 10,
+            "image": "9259a7d8a2294e173a8e3927e97799e5cb9c4f8a48ae7aa68a073416b2f4ddb7i0",
+            "message": "Testing out the offset without a stop! Check the image."
+        },
+        {
+            "id": "welcome3",
+            "action": "add",
+            "offset": 11,
+            "stop": 20,
+            "image": "9259a7d8a2294e173a8e3927e97799e5cb9c4f8a48ae7aa68a073416b2f4ddb7i0",
+            "message": "Testing out the offset with a stop! Check the image."
+        },
+        {
+            "id": "welcome1",
+            "action": "update",
+            "block": 859765,
+            "message": "Updated welcome1 message."
+        },
+        {
+            "id": "welcome3",
+            "action": "update",
+            "offset": 15,
+            "message": "Updated welcome3 message at stop 15."
+        },
+        {
+            "id": "welcome1",
+            "action": "delete",
+            "block": 859768
+        },
+        {
+            "id": "welcome3",
+            "offset": 18,
+            "action": "delete"
+        },
+        {
+            "id": "welcome",
+            "action": "add",
+            "block": 859750,
+            "stop": 859760,
+            "image": "9259a7d8a2294e173a8e3927e97799e5cb9c4f8a48ae7aa68a073416b2f4ddb7i0",
+            "message": "Welcome to the Goblin Oracle!"
+        },
+        {
+            "id": "welcome",
+            "action": "add",
+            "block": 859753,
+            "stop": 859763,
+            "image": "9259a7d8a2294e173a8e3927e97799e5cb9c4f8a48ae7aa68a073416b2f4ddb7i0",
+            "message": "Welcome to Test project!",
+            "project": "test-project"
+        }
+   ]
+}
