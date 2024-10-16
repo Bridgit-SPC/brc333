@@ -1,0 +1,16 @@
+{   
+    "protocol": "BRC333",
+    "operation": "source",
+    "description": "This is a source test for the BRC333 protocol.",
+    "sources":  [
+        { "script": "Oracle", "sat": "3240144337606584" },
+        { "script": "TimeTravel", "sat": "3240144334924632" },
+        { "script": "Utils", "sat": "3240144337038870" },
+        { "script": "UI", "sat": "3240144337355676" },
+        { "script": "DMT", "sat": "3240144334925178" },
+        { "oracle": "fractal_goblins", "satNumber": 3240144331266632, "skip": 0 }, 
+        { "oracle": "trait", "satNumber": 3240144332600632, "skip": 0, "filter": "displayTraits" },
+        { "system": "fractal_goblins", "satNumber": 3240144331267178, "skip": 0 },
+        { "replace": "fractal_goblins", "satNumber": 3240144334003632, "skip": 0 }
+    ]
+}

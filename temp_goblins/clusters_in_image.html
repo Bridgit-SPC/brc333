@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html><head><style>.color-box{width: 50px; height: 20px; display: inline-block; margin-right: 10px; border: 1px solid #000;}.flex-container {display: flex;}.flex-child {flex: 1; padding: 10px;}img{image-rendering: pixelated; image-rendering: -moz-crisp-edges; image-rendering: crisp-edges; width: 500px; height: auto;}</style></head><body>
+<div class="flex-container">
+<div class="flex-child"><img src="./traits/6.png" alt="Source Image"></div>
+<div class="flex-child"><img src="clustered_6.png" alt="Clustered Image"></div>
+<div class="flex-child"><h1>Colors in Image</h1>
+<ul>
+<li><button class="color-box" style="background-color:#747375;" onclick="copyToClipboard('#747375')"></button> #747375 - 178</li>
+<li><button class="color-box" style="background-color:#fea3b1;" onclick="copyToClipboard('#fea3b1')"></button> #fea3b1 - 9648</li>
+<li><button class="color-box" style="background-color:#ffffff;" onclick="copyToClipboard('#ffffff')"></button> #ffffff - 174</li>
+</ul></div></div>
+<script>function copyToClipboard(text) {  var dummy = document.createElement("textarea");  document.body.appendChild(dummy);  dummy.value = text;  dummy.select();  document.execCommand("copy");  document.body.removeChild(dummy);  alert("Copied " + text);}</script>
+</body></html>

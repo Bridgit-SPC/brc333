@@ -1,0 +1,16 @@
+{   
+    "protocol": "BRC333",
+    "operation": "source",
+    "description": "The scripts and JSON configuration data inscriptions that govern the Fractal Goblin Club sapplication, which is powered by BRC333.",
+    "sources":  [
+        { "script": "Oracle", "src": "https://natowls.xyz/oracle_fb_local.js" },
+        { "script": "TimeTravel", "src": "https://natowls.xyz/timetravel_fb_local.js" },
+        { "script": "Utils", "src": "https://natowls.xyz/brc333fbutils.js" },
+        { "script": "UI", "src": "https://natowls.xyz/brc333fbui.js" },
+        { "script": "DMT", "src": "https://natowls.xyz/brc333fbdmt.js" },
+        { "oracle": "fractal_goblins", "satNumber": 3240144331266632, "skip": 0 }, 
+        { "oracle": "trait", "satNumber": 3240144332600632, "skip": 0, "filter": "displayTraits" },
+        { "system": "fractal_goblins", "satNumber": 3240144331267178, "skip": 0 },
+        { "replaceSats": "fractal_goblins", "satNumber": 3240144334003632, "skip": 0 }
+    ]
+}

@@ -1,0 +1,106 @@
+{   
+    "protocol": "BRC333",
+    "operation": "oracle",
+    "description": "This is a test oracle for the BRC333 protocol.",
+    "messages":  [
+        {
+        "id": "welcome",
+        "action": "add",
+        "block": 858080,
+        "image": "9259a7d8a2294e173a8e3927e97799e5cb9c4f8a48ae7aa68a073416b2f4ddb7i0",
+        "message": "Welcome to the Goblin Oracle!"
+        },
+        {
+            "id": "update_test",
+            "action": "update",
+            "block": 858090,
+            "message": "This updated message is from the future!"
+        },
+        {
+        "id": "update_test",
+        "action": "add",
+        "block": 858081,
+        "message": "This message will be updated soon."
+        },
+        {
+        "id": "range_test",
+        "action": "add",
+        "block": 858083,
+        "stop": 858087,
+        "message": "This message will display for a range of blocks."
+        },
+        {
+        "id": "future_message",
+        "action": "add",
+        "block": 858090,
+        "message": "This message is from the future!"
+        },
+        {
+        "id": "delete_soon",
+        "action": "add",
+        "block": 858091,
+        "message": "This message will be deleted soon."
+        },
+        {
+        "id": "delete_soon",
+        "block": 858100,
+        "action": "delete"
+        },
+        {
+        "id": "long_range",
+        "action": "add",
+        "block": 858090,
+        "stop": 858150,
+        "message": "This message will be displayed for a long range of blocks."
+        },
+        {
+            "id": "herewego",
+            "action": "add",
+            "block": 859000,
+            "message": "Here we go again!"
+        },
+        {
+            "id": "update_test",
+            "action": "add",
+            "block": 859001,
+            "message": "This message will be updated soon."
+        },
+        {
+            "id": "range_test",
+            "action": "add",
+            "block": 859002,
+            "stop": 858087,
+            "message": "This message will display for a range of blocks."
+        },
+        {
+            "id": "future_message",
+            "action": "add",
+            "block": 859010,
+            "message": "This message is from the future!"
+        },
+        {
+            "id": "update_test",
+            "action": "update",
+            "block": 859010,
+            "message": "This updated message is from the future!"
+        },
+        {
+            "id": "delete_soon",
+            "action": "add",
+            "block": 859012,
+            "message": "This message will be deleted soon."
+        },
+        {
+            "id": "delete_soon",
+            "block": 859020,
+            "action": "delete"
+        },
+        {
+            "id": "long_range",
+            "action": "add",
+            "block": 859100,
+            "stop": 859200,
+            "message": "This message will be displayed for a long range of blocks."
+        }
+    ]
+}

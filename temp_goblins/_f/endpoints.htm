@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fractal Bitcoin Ordinals API Interface</title>
+    <style>
+        body { background-color: orangered; font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+        select, input, button { margin: 10px 0; padding: 5px; }
+        #output { border: 1px solid #ddd; padding: 10px; margin-top: 20px; }
+        #links { margin-top: 20px; }
+        #links a { display: inline-block; margin-right: 10px; margin-bottom: 5px; }
+        #output pre { white-space: pre; overflow-x: auto; word-wrap: normal; }
+        body, #output, #links a { color: white; }
+        input, button, select { color: black; }
+        #inscriptionId { width: 500px; } /* New rule to make inscription ID input twice as wide */
+    </style>
+</head>
+<body>
+    <h1>Fractal Bitcoin<br>Ordinals API Interface</h1>
+    <select id="endpoint">
+        <option value="">Select an endpoint</option>
+        <option value="content">Content of Inscription</option>
+        <option value="blockhash">Block Hash</option>
+        <option value="blockheight">Latest Block Height</option>
+        <option value="blockinfo">Block Info</option>
+        <option value="blocktime">Latest Block Time</option>
+        <option value="children">Children of Inscription</option>
+        <option value="inscription">Inscription Info</option>
+        <option value="metadata">Inscription Metadata</option>
+        <option value="parents">Parents of Inscription</option>
+        <option value="sat">Inscriptions on Sat</option>
+    </select>
+    <div id="inputFields"></div>
+    <button onclick="fetchData()">Fetch Data</button>
+    <div id="output"></div>
+    <p>Brought to you by <a href="https://brc333.xyz">BRC333 protocol</a></p>
+
+    <script>
+        const baseUrl = 'https://ordinals.fractalbitcoin.io'; 
+
+        document.getElementById('endpoint').addEventListener('change', updateInputFields);
+
+        function updateInputFields() {
+            const endpoint = document.getElementById('endpoint').value;
+            const inputFields = document.getElementById('inputFields');
+            const fetchButton = document.querySelector('button');
+            
+            inputFields.innerHTML = '';
+        
+            if (endpoint === 'blockheight' || endpoint === 'blocktime') {
+                fetchButton.style.display = 'none';
+                fetchData();
+            } else if (endpoint === 'blockinfo' || endpoint === 'blockhash') {
+                const lastBlockHeight = localStorage.getItem('blockHeight');
+                if (lastBlockHeight) {
+                    document.getElementById('query').value = lastBlockHeight;
+                    fetchData();
+                }
+                fetchButton.style.display = 'block';
+            } else {
+                fetchButton.style.display = 'block';
+                switch(endpoint) {
+                    case 'content':
+                        inputFields.innerHTML = '<input type="text" id="inscriptionId" placeholder="Inscription ID">';
+                        break;
+                    case 'inscription':
+                    case 'metadata':
+                        inputFields.innerHTML = '<input type="text" id="inscriptionId" placeholder="Inscription ID">';
+                        break;
+                    case 'children':
+                    case 'parents':
+                        inputFields.innerHTML = `
+                            <input type="text" id="inscriptionId" placeholder="Inscription ID">
+                            <input type="number" id="page" placeholder="Page (optional)">
+                            <input type="checkbox" id="inscriptions"> Get inscription details
+                        `;
+                        break;
+                    case 'blockhash':
+                        inputFields.innerHTML = '<input type="number" id="height" placeholder="Block Height (optional)">';
+                        break;
+                    case 'blockinfo':
+                        inputFields.innerHTML = '<input type="text" id="query" placeholder="Block Height or Hash">';
+                        break;
+                    case 'sat':
+                        inputFields.innerHTML = `
+                            <input type="number" id="satNumber" placeholder="Sat Number">
+                            <input type="number" id="page" placeholder="Page (optional)">
+                            <input type="number" id="index" placeholder="Index (optional)">
+                        `;
+                        break;
+                }
+            }
+            console.log('updateInputFields called, current state:', {
+                endpoint: document.getElementById('endpoint')?.value,
+                inscriptionId: document.getElementById('inscriptionId')?.value || getUrlParams().inscriptionId,
+                page: document.getElementById('page')?.value,
+                inscriptions: document.getElementById('inscriptions')?.checked
+            });
+        }
+
+
+        let isFetching = false;
+
+        async function fetchData(customUrl = null) {
+            if (isFetching) return;
+            isFetching = true;
+
+            let endpoint = customUrl ? customUrl.split('/')[2] : document.getElementById('endpoint').value;
+            let inscriptionId = document.getElementById('inscriptionId')?.value || getUrlParams().inscriptionId;
+            
+            if (customUrl) {
+                const urlParts = customUrl.split('/');
+                console.log('URL parts:', urlParts);
+                endpoint = urlParts[2];
+                id = urlParts[3];
+                console.log('Extracted endpoint and id:', { endpoint, id });
+                updateUI(endpoint, id);
+            } else {
+                id = endpoint === 'sat' ? document.getElementById('satNumber')?.value : document.getElementById('inscriptionId')?.value;
+            }
+            
+            let url = `${baseUrl}`;
+
+            if (customUrl) {
+                url = `${baseUrl}${customUrl}`;
+            } else {
+                switch(endpoint) {
+                    case 'content':
+                        url += `/content/${inscriptionId}`;
+                        break;
+                    case 'sat':
+                        const satNumber = document.getElementById('satNumber')?.value;
+                        const satPage = document.getElementById('page')?.value;
+                        const index = document.getElementById('index')?.value;
+                        url += `/r/sat/${satNumber}`;
+                        if (satPage) url += `/${satPage}`;
+                        if (index) url += `/at/${index}`;
+                        break;
+                    case 'parents':
+                    case 'children':
+                        const page = document.getElementById('page')?.value;
+                        const inscriptions = document.getElementById('inscriptions')?.checked;
+                        url += `/r/${endpoint}/${inscriptionId}`;
+                        if (page) url += `/${page}`;
+                        if (inscriptions) url += '/inscriptions';
+                        break;
+                    case 'inscription':
+                    case 'metadata':
+                        url += `/r/${endpoint}/${inscriptionId}`;
+                        break;
+                        case 'blockhash':
+                        const height = document.getElementById('height').value;
+                        url += height ? `/blockhash/${height}` : '/blockhash';
+                        break;
+                    case 'blockheight':
+                        url += '/r/blockheight';
+                        break;
+                    case 'blockinfo':
+                        url += `/r/blockinfo/${document.getElementById('query').value}`;
+                        break;
+                    case 'blocktime':
+                        url += '/r/blocktime';
+                        break;
+                }
+            }
+
+            console.log('Final URL:', url);
+            try {
+                const response = await fetch(url);
+                const contentType = response.headers.get("content-type");
+                
+                if (contentType && contentType.indexOf("application/json") !== -1) {
+                    const data = await response.json();
+                    displayJsonWithLinks(data);
+                } else {
+                    const data = await response.text();
+                    const outputDiv = document.getElementById('output');
+                    outputDiv.innerHTML = `<pre>${escapeHtml(data)}</pre>`;
+                    
+                    if (contentType && contentType.indexOf("text/html") !== -1) {
+                        const viewHtmlLink = document.createElement('a');
+                        viewHtmlLink.href = '#';
+                        viewHtmlLink.textContent = 'View HTML';
+                        viewHtmlLink.onclick = (e) => {
+                            e.preventDefault();
+                            displayHtmlContent(data);
+                        };
+                        outputDiv.appendChild(viewHtmlLink);
+                    }
+                }
+            } catch (error) {
+                document.getElementById('output').innerText = `Error: ${error.message}`;
+            }
+        }
+
+        function escapeHtml(unsafe) {
+            return unsafe
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+
+        document.getElementById('inscriptionId')?.addEventListener('input', (e) => {
+            console.log('InscriptionId input event:', e.target.value);
+        });
+
+        function logState(location) {
+            console.log(`State at ${location}:`, {
+                endpoint: document.getElementById('endpoint')?.value,
+                inscriptionId: document.getElementById('inscriptionId')?.value,
+                inscriptionIdAttribute: document.getElementById('inscriptionId')?.getAttribute('value'),
+                page: document.getElementById('page')?.value,
+                inscriptions: document.getElementById('inscriptions')?.checked
+            });
+        }
+
+        function displayJsonWithLinks(data) {
+            const outputDiv = document.getElementById('output');
+            outputDiv.innerHTML = '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
+
+            const linksDiv = document.createElement('div');
+            linksDiv.id = 'links';
+            outputDiv.appendChild(linksDiv);
+
+            if (data.id) {
+                addLink(linksDiv, 'Content', `/content/${data.id}`);
+                addLink(linksDiv, 'Metadata', `/r/metadata/${data.id}`);
+                addLink(linksDiv, 'Parents', `/r/parents/${data.id}`);
+                addLink(linksDiv, 'Children', `/r/children/${data.id}`);
+                persistValue('inscriptionId', data.id);
+            }
+
+            if (data.ids) {
+                data.ids.forEach(id => {
+                    addLink(linksDiv, `Content (${id})`, `/content/${id}`);
+                    addLink(linksDiv, `Metadata (${id})`, `/r/metadata/${id}`);
+                    addLink(linksDiv, `Parents (${id})`, `/r/parents/${id}`);
+                    addLink(linksDiv, `Children (${id})`, `/r/children/${id}`);
+                });
+            }
+
+            if (data.sat) {
+                addLink(linksDiv, 'Inscriptions on Sat', `/r/sat/${data.sat}`);
+                addLink(linksDiv, 'Content', `/content/${data.id}`);
+            }
+
+            if (data.height) {
+                persistValue('blockHeight', data.height);
+            }
+        }
+
+        function persistValue(key, value) {
+            localStorage.setItem(key, value);
+        }
+
+        function populatePersistedValues() {
+            const inscriptionIdInput = document.getElementById('inscriptionId');
+            const blockHeightInput = document.getElementById('height');
+            const queryInput = document.getElementById('query');
+
+            if (inscriptionIdInput) {
+                inscriptionIdInput.value = localStorage.getItem('inscriptionId') || '';
+            }
+
+            if (blockHeightInput) {
+                blockHeightInput.value = localStorage.getItem('blockHeight') || '';
+            }
+
+            if (queryInput) {
+                queryInput.value = localStorage.getItem('blockHeight') || '';
+            }
+        }
+
+
+        function updateUI(endpoint, id) {
+            console.log('updateUI called with:', { endpoint, id });
+            document.getElementById('endpoint').value = endpoint;
+            updateInputFields();
+
+            if (endpoint === 'sat') {
+                const satNumberInput = document.getElementById('satNumber');
+                if (satNumberInput) {
+                    satNumberInput.value = id;
+                }
+            } else {
+                const inscriptionIdInput = document.getElementById('inscriptionId');
+                if (inscriptionIdInput) {
+                    inscriptionIdInput.value = id;
+                }
+            }
+        }
+        
+        function addLink(container, text, href) {
+            const link = document.createElement('a');
+            link.href = '#';
+            link.textContent = text;
+            link.onclick = (e) => {
+                e.preventDefault();
+                console.log('Link clicked:', { text, href });
+                fetchData(href);
+            };
+            container.appendChild(link);
+            container.appendChild(document.createElement('br'));
+        }
+
+        function getUrlParams() {
+            const params = new URLSearchParams(window.location.search);
+            return Object.fromEntries(params.entries());
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            logState('DOMContentLoaded');
+            populatePersistedValues();
+            const params = getUrlParams();
+            console.log('params',params);
+            if (params.endpoint) {
+                document.getElementById('endpoint').value = params.endpoint;
+                updateInputFields();
+                if (params.inscriptionId) {
+                    document.getElementById('inscriptionId').value = params.inscriptionId;
+                }
+                fetchData();
+            }
+        });
+        function displayHtmlContent(htmlContent) {
+            const outputDiv = document.getElementById('output');
+            outputDiv.innerHTML = '';
+
+            const backLink = document.createElement('a');
+            backLink.href = '#';
+            backLink.textContent = 'Back to Content';
+            backLink.onclick = (e) => {
+                e.preventDefault();
+                const inscriptionId = document.getElementById('inscriptionId').value;
+                fetchData(`/content/${inscriptionId}`);
+            };
+            outputDiv.appendChild(backLink);
+            outputDiv.appendChild(document.createElement('br'));
+
+            const contentDisplay = document.createElement('div');
+            contentDisplay.innerHTML = htmlContent;
+            outputDiv.appendChild(contentDisplay);
+
+            // Execute any scripts in the content
+            const scripts = contentDisplay.getElementsByTagName('script');
+            for (let i = 0; i < scripts.length; i++) {
+                eval(scripts[i].innerText);
+            }
+        }
+
+        function displayPreContent(content) {
+            const outputDiv = document.getElementById('output');
+            outputDiv.innerHTML = `<pre style="white-space: pre-wrap; word-wrap: break-word; overflow-x: auto;">${content}</pre>`;
+        }
+
+        document.getElementById('endpoint').addEventListener('change', () => {
+            updateInputFields();
+        });
+
+        document.querySelector('button').addEventListener('click', () => {
+            fetchData();
+        });
+
+        const inscriptionIdInput = document.getElementById('inscriptionId');
+        if (inscriptionIdInput) {
+            const observer = new MutationObserver((mutations) => {
+                mutations.forEach((mutation) => {
+                    if (mutation.type === 'attributes' && mutation.attributeName === 'value') {
+                        console.log('MutationObserver: inscriptionId value changed:', mutation.target.value);
+                    }
+                });
+            });
+
+            observer.observe(inscriptionIdInput, { attributes: true, attributeFilter: ['value'] });
+        }
+
+    </script>
+</body>
+</html>
