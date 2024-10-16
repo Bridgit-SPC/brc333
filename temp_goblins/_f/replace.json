@@ -1,9 +1,0 @@
-{   
-    "protocol": "BRC333",
-    "operation": "sat replacements",
-    "description": "This is a sat replacement test for the BRC333 protocol.",
-    "entries":  [
-        { "original": 1, "new": 100000000000 },
-        { "original": 2, "new": 200000000000 }
-    ]
-}
