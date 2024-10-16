@@ -6,3 +6,6 @@ goblins/coordinates
 goblins/Goblin*
 goblins/art
 goblins/generator
+example_compile.js
+example_deploy.js
+example_display.htm
