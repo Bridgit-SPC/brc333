@@ -1,0 +1,16 @@
+{   
+    "protocol": "BRC333",
+    "operation": "source",
+    "description": "These are the prodcution source sats for the Fractal Goblin Club sapplication.",
+    "sources":  [
+        { "script": "Oracle", "sat": "10630308257247836", "backup": "4fa014f3b18cb6eae9b355a22989a0c42d5a4335bee7cf596646cf7373866dc0i0"},
+        { "script": "TimeTravel", "sat": "10630308257248384", "backup": "645adc6e8443db9116fe4d925b5414b1da6ee76f28c059ef8738a1ffb9256c18i0" },
+        { "script": "Utils", "sat": "10630308256389836", "backup": "c9c1de8035a2b7a09ddb1be45212acd3e4ccd5099cb019b43273fbfb002e2ad1i0" },
+        { "script": "UI", "sat": "10575910274452126", "backup": "70d7401c3898598fab178aae1b3f3b4ac80fde106f176d702ac9b1624166db87i0" },
+        { "script": "DMT", "sat": "10630308259047836", "backup": "500ac3261d00d3b0df46d3e2f4c12f2cfc15e09e706ccd05ed4cbf2426b3b21ai0" },
+        { "oracle": "fgc", "sat": 3240144331266632, "skip": 1, "backup": "c677e0b298b4d975312bc83cc3f2dd365e681d0ea1aa9932444d99279a076bb5i0" }, 
+        { "oracle": "trait", "sat": 3240144332600632, "skip": 1, "backup": "e0203bfbf63ade1b09c023b199025400ab54986e6118b69470d3a419969371aai0", "filter": "displayTraits" },
+        { "system": "fgc", "sat": 10575910273581096, "skip": 1, "backup": "6a74278a4ff322747190849390fed06c666a779630429eeb3db756dca8f8809ai0" },
+        { "replace": "fgc", "sat": 3240144334003632, "skip": 1, "backup": "45e5bbc6d9e9c62f50705571bd3f870749495850ab34e28311f4c2f03ea3450bi0" }
+    ]
+}

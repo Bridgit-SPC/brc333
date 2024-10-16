@@ -1,0 +1,12 @@
+{   
+    "protocol": "BRC333",
+    "operation": "timetravel",
+    "description": "This is a timetravel test for Fractal Goblins.",
+    "entries":  [
+        { "project": "fgc", "type": "replaceLines", "payload": "{ \"scriptName\": \"goblins\", \"start\": 1, \"stop\": -1, \"code\": \"   console.log('TimeTravel is active');\"}"},
+        { "project": "fgc", "type": "replace", "payload": "{ \"funcName\": \"playCameraSound\", \"funcBody\": \"console.log('playing camerasound');cameraSound.currentTime = 0; cameraSound.play();\"}", "height": 60000},
+        { "project": "fgc", "type": "data", "payload": { "shiftshapr": { "sat": 1742692208397618} } },
+        { "project": "fgc", "type": "code", "payload": "function greet(inscriptionId) { alert(`Hello, world!\nsat=${window[inscriptionId].sat}\nThe function has executed`); }"},
+        { "project": "fgc", "type": "command", "payload": "console.log('got here');greet('shiftshapr');"}
+    ]
+}
