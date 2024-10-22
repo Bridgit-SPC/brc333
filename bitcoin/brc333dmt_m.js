@@ -788,28 +788,6 @@ function estimateBlockHeight(targetDate) {
 }
 
 /**
- * Fetches metadata from a given URL
- * @param {string} url - The URL to fetch metadata from
- * @param {boolean} retry - Whether to retry the fetch if it fails
- * @returns {Promise<Object>} The fetched metadata
- */
-async function getMetadata(url, retry = false) {
-  try {
-      const response = await fetch(url);
-      const data = await response.json();
-      return data;
-  } catch (error) {
-      console.error('Error fetching metadata:', error);
-      if (!retry) {
-          const timestamp = Math.floor(Date.now() / (60000 * 10)); // 10 minutes
-          const newUrl = `${url}?timestamp=${timestamp}`;
-          return getMetadata(newUrl, true);
-      }
-      throw error;
-  }   
-}
-
-/**
  * Converts traits to a string representation
  * @param {Array<string>} traits - Array of traits
  * @param {number} start - Start index for traits
@@ -1144,7 +1122,6 @@ window.DMT = {
   drawMoon,
   findPatterns,
   estimateBlockHeight,
-  getMetadata,
   traitsToString,
   displayPowers,
   stageToString,
