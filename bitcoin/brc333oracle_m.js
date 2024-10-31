@@ -120,7 +120,7 @@ rateLimiter.set(key, Date.now());
     : `/r/sat/${sat}/${page}`;
   try {
     const response = await getMetadata(url);
-    //console.log('response',response);
+    if (testing) console.log('response',response);
     if (response && Array.isArray(response.ids)) {
       return response.ids.slice(skip);
     } else {
@@ -239,6 +239,8 @@ function displayScrollingMessages(messages, interval = 5000, repeat = true, cont
   });
   scrollContainer.appendChild(fragment);
 
+  if (testing) console.log(`Total messages: ${messageElements.size}`);
+
   let index = 0;
   function showNextMessage() {
     const currentMessage = messages[index];
@@ -326,39 +328,58 @@ async function processMessages(oracleSats, allMessages = false, displayInterval 
   let messageMap = new Map();
   let messageId = 0;
 
+  if (testing) console.log('oracleSats',oracleSats);
   for (const { sat, skip = 0, filter = null } of oracleSats) {
     let filterArray = null;
+    if (testing) console.log(`Processing sat: ${sat}`);
     
     if (filter) {
         const evalResult = eval(filter);
         filterArray = Array.isArray(evalResult) ? [...new Set(evalResult)] : evalResult;
     }
+    if (testing) console.log(`filterArray for sat ${sat}:`, filterArray);
     
     const inscriptionIds = await getInscriptionIds(sat, 0, skip);
+    if (testing) console.log('inscriptionIds',inscriptionIds);
 
     for (const inscriptionId of inscriptionIds) {
+      if (testing) console.log('inscriptionId',inscriptionId);
       const content = await getInscriptionContent(false,inscriptionId);
       
       if (content && content.protocol === 'BRC333' && content.operation === 'oracle') {
         content.messages.forEach(msg => {
           const { id = `msg_${messageId++}`, action = 'add', message, block, offset, stop, image, msgFilter, link } = msg;
-          const effectiveBlock = block || launchBlock + offset;
-          const effectiveStop = offset && stop ? (stop + launchBlock) : (stop || effectiveBlock);
+          const effectiveBlock = block ?? (launchBlock + (offset || 0));
+          const effectiveStop = (offset ?? 0) && stop ? (stop + launchBlock) : (stop || effectiveBlock);
 
           if (filterArray && msgFilter) { 
             if (Array.isArray(filterArray) && !filter.includes(msgFilter)) {
+              if (testing) console.log('Filter mismatch:', msgFilter, filterArray, sat, effectiveBlock, effectiveStop);
               return;
             } else if (typeof filterArray === 'string' && filterArray !== msgFilter) {
+              if (testing) console.log('Filter mismatch:', msgFilter, filterArray, sat, effectiveBlock, effectiveStop);
               return; 
             }
           } else if (!filterArray && msgFilter) {
+            if (testing) console.log('No Filter, msgFilter:', msgFilter, sat, effectiveBlock, effectiveStop);
             return;
           } else if (filterArray && !msgFilter) {
+            if (testing) console.log('No msgFilter, filter:', filterArray, sat, effectiveBlock, effectiveStop);
             return;
           }
 
           if (!allMessages && (effectiveBlock > currentHeight || currentHeight > effectiveStop)) {
+            if (testing) {
+              console.log('Message excluded:', msg);
+              console.log('effectiveBlock', effectiveBlock, 'currentHeight',currentHeight,'effectiveStop', effectiveStop);
+              console.log('block',block, 'launchBlock',launchBlock, 'stop', stop);
+            }
             return;
+          }
+          if (testing) {
+            console.log('Message included:', msg);
+            console.log('effectiveBlock', effectiveBlock, 'currentHeight',currentHeight,'effectiveStop', effectiveStop);
+            console.log('block',block, 'launchBlock',launchBlock, 'stop', stop);
           }
 
           switch (action) {
@@ -376,7 +397,9 @@ async function processMessages(oracleSats, allMessages = false, displayInterval 
     }
   }
 
+  if (testing) console.log('Final messageMap:', messageMap);
   const currentMessages = Array.from(messageMap.values());
+  if (testing) console.log('Current messages:', currentMessages);
 
   if (currentMessages.length > 0) {
     const stopDisplay = displayScrollingMessages(currentMessages, displayInterval, repeat, container, scrollText);

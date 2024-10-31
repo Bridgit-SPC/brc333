@@ -2299,7 +2299,7 @@ const categoryData = [
 
 async function loadAndModify(now) {
     try {
-        blockinfo = await getMetadata(`https://ordinals.com/r/blockinfo/${blk}`);
+        blockinfo = await getMetadata(`/r/blockinfo/${blk}`);
     } catch (error) {
         console.error('Error with loadAndModify', error);
     }
@@ -2351,45 +2351,62 @@ function generateImage(canvas) {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     const date =new Date(now);
+    if (testing) console.log('date',date);
     const hours = date.getHours();
+    if (testing) console.log('hours',hours);
     
     let moonIndex;
     ({ phase, stage, moonIndex } = calculateMoonPhase(date));
+    if (testing) console.log('phase:',phase);
+    if (testing) console.log('stage',stage);
 
     selectedTraits = [];
 
     const { traitsByCategory, allTraitsByCategory } = DMT.groupTraitsByCategory(categoryData);
     const isFullMoon = phase >= 0.47 && phase <= 0.53;
+    if (testing) console.log('isFullMoon',isFullMoon);
 
     // Randomly select one trait from each category
     let i = 0;
     for (const category in traitsByCategory) {
+        if (testing) console.log('category',category);
+        if (testing) console.log('traitsByCategory[category]',traitsByCategory[category]);
         const traits = traitsByCategory[category];
         const traitIndex =  dna[i]% traits.length;
         const selectedTrait = traits[traitIndex];
         i++;
         if (category === "9") {
             if ((hours >= 21 || hours <= 5) && phase >= 0.47 && phase <= 0.53) {
+                if (testing) console.log('phase',phase);
+                if (testing) console.log('moon lasers');
                 selectedTraits.push('Moon Lasers');
             } else if (phase >= 0.47 && phase < 0.53) {
+                if (testing) console.log('phase',phase);
+                if (testing) console.log('day lasers');
                 selectedTraits.push('Day Lasers');
             } else selectedTraits.push(selectedTrait);
         } else selectedTraits.push(selectedTrait);
     }
 
+    if (testing) console.log('selectedTraits',selectedTraits);
 
     gematriaOneDigit = doGematria(blk);
     gematriaTwoDigit = doGematria(blk, 100);
 
+    if (testing) console.log('gematriaOneDigit', gematriaOneDigit);
+    if (testing) console.log('gematriaTwoDigit', gematriaTwoDigit);
 
     const multiples = [39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,69,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,91,92,93,94,95,96,97,98,99,100,101,102,103,104,105,108,177,178,179,180,181,182,183,184,185,186,187,188,189,220,221,223,224,225,226,227,228,229,230,231,232,233,234,320,321,322,323,324,325,326,327,328,329,330,331,332,333,334,420,421,422,423,424,425,426,427,428,429,430,431,432,433,434,520,521,522,523,524,525,526,527,528,529,530,531,532,533,534,920,921,922,923,924,925,926,927,928,929,930,931,932,933,934];
     const powers = [7];
     const contains = [70,108,321,420,1089,4761,28980,176400];
     blockPatterns = findPatterns(blk,gematriaOneDigit,gematriaTwoDigit,multiples,contains,powers);
+    if (testing) console.log('Block', blk);
+    if (testing) console.log('blockPatterns',blockPatterns);
 
     nonce = blockinfo.nonce;
     bits = blockinfo.bits;
     timestamp = blockinfo.timestamp;
+    if (testing) console.log('nonce',nonce);
     gematria_nonce_1 = doGematria(nonce);
     gematria_nonce_2 = doGematria(nonce, 100);
     noncePatterns = findPatterns(nonce,gematria_nonce_1,gematria_nonce_2,multiples,contains,powers);
@@ -2399,7 +2416,11 @@ function generateImage(canvas) {
     const size = 100;
     const random = Math.random();
     const dnaSeed = Math.floor((dna[0]*100+dna[1]*10+dna[2])/1000*backgroundColors.length);
+    if (testing) console.log('dnaSeed', dnaSeed);
     const dnaNext = dnaSeed + 1 + updates;
+    if (testing) console.log('dnaNext', dnaNext);
+    if (testing) console.log('dna',dna);
+    if (testing) console.log('updates',updates);
     let noMoon = false;
 
     const g1 = (updates === 0) ? dna[0] : dna[updates % dna.length];
@@ -2428,6 +2449,7 @@ function generateImage(canvas) {
         background = 'Fire';
         drawTrait(ctx, backgrounds, 'Fire');
     } else if (phase >= 0.22 && phase < 0.28) {
+        if (testing) console.log('half moon waxing');
         background = 'Radial';
         const centerX = size / 2;
         const centerY = size / 2;
@@ -2441,6 +2463,7 @@ function generateImage(canvas) {
         ctx.fillStyle = gradient;
         ctx.fillRect(0, 0, size, size);
     } else if (phase >= 0.72 && phase < 0.78) {
+        if (testing) console.log('half moon waning');
         const x = size / 2;
         const y = size / 2;
 
@@ -2458,11 +2481,13 @@ function generateImage(canvas) {
             background = `Solid (moon phase ${parseFloat(phase).toFixed(2)})`;
             console.error('Conic gradients are not supported in this browser.');
             const solid = (updates === 0) ? dnaSeed : dnaNext;
+            if (testing) console.log('Solid',solid);
             const color = backgroundColors[Math.floor(solid % backgroundColors.length)];
             ctx.fillStyle = color;
             ctx.fillRect(0, 0, size, size);
         }
     } else {
+        if (testing) console.log('contains_70',includesPattern(blockPatterns, 'contains_70'));
         if (includesPattern(blockPatterns, 'contains_70')) {   
             const gradient = ctx.createLinearGradient(0, 0, size, size);
             background = 'Linear';
@@ -2485,6 +2510,7 @@ function generateImage(canvas) {
 
     const moonColors = moonArray[moonIndex].colors;
     moonName = moonArray[moonIndex].trait;
+    if (testing) console.log('moonName',moonName);
     moonCoordinates = getMoonCoordinates(moonColors);
     drawMoon(ctx, moonColors, moonName, stage, hours, noMoon);    
 
@@ -2585,6 +2611,7 @@ function generateImage(canvas) {
         }
     }
     
+    if (testing) console.log('displayTraits',displayTraits);
     window.Oracle.initializeOracle(displayTraits, inscriptionId);
     
     totalScores = [0, 0, 0, 0, 0, 0, 0, 0];
