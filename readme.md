@@ -1,20 +1,28 @@
-# BRC333 Satplications: Dynamic Ordinals on Bitcoin
+# **BRC333 Satplications: Dynamic Ordinals on Bitcoin**
 
-### Overview
-BRC333 satplications enable interactive and evolving Bitcoin ordinals by leveraging **Digital Matter Theory (DMT)**, recursive inscriptions, and **designated sats**. This modular system allows dynamic content creation, RPG mechanics, and future-proof updates through **reinscriptions**.
+### **Overview**  
+BRC333 satplications extend the potential of Bitcoin ordinals by enabling **interactive and evolving digital artifacts**. These applications use **Digital Matter Theory (DMT)** to provide dynamic functionality beyond traditional static NFTs. Satplications operate through **modular scripts and recursive inscriptions** tied to designated satoshis, making them easily updatable and interactive.
 
----
+The two key features powering these applications are the **Oracle module** and **Time Travel module**. Together, they allow ordinals to **respond dynamically to block data, time-based events, user interactions, and reinscriptions**.
 
-## Key Features
-- **Modular, Loadable Components**: Scripts are modular and loadable into multiple projects.
-- **Pixel/SVG Support**: Create flexible, interactive visuals with pixel coordinates and vector art.
-- **Power Values (0-10)**: Integrate RPG-style powers into ordinals.
-- **Pako.js Compression**: Optimizes logic for reduced block space usage.
-- **Time Travel Ready**: Explore how ordinals evolve across historical blocks.
+- **Oracle Module**: Delivers context-sensitive messages, actions, and visual changes based on **block height triggers, offsets, or events**. The oracle provides in-world messaging or announcements that reflect events in the Bitcoin blockchain or satplication world.  
+- **Time Travel Module**: Allows ordinals to **change their state across different blocks and timelines** by processing reinscriptions dynamically. Users can explore the historical or future states of their ordinals and interact with traits, visual components, or functionality tied to specific moments in the blockchain timeline.
+
+These features make BRC333 satplications highly versatile, supporting **interactive storytelling, gamified experiences, and evolving digital collectibles**. In the **NatGoblin satplication**, these modules enable moon-cycle-based transformations, power upgrades, and interactive timelines.
 
 ---
 
-## Repository Structure
+## **Key Features**  
+- **Modular, Loadable Components**: Scripts are designed as modular components, easily loadable into different projects.
+- **Pixel and SVG-based Visuals**: Offers flexibility for interactive, pixel-aligned art or vector-based graphics.
+- **RPG-style Powers (0-10)**: Goblins and ordinals gain RPG powers that change based on traits or events.
+- **Pako.js Compression**: Optimizes script size to minimize block space usage.
+- **Oracle Messaging**: Context-aware messages appear at certain blocks or through offset-triggered events.
+- **Time Travel Ready**: Users can explore the past expressions of ordinals at different times in the past and interact with evolving traits.
+
+---
+
+## **Repository Structure**  
 
 ```
 BRC333_Satplications/
@@ -39,66 +47,75 @@ BRC333_Satplications/
 
 ---
 
-## Modules Overview
+## **Modules Overview**
 
 1. **ng_prod.htm**  
-   - Main HTML entry point for the NatGoblin satplication.
-   - Integrates modules for **UI, interactive features, and moon phase coordination**.
+   - The main HTML entry point for the NatGoblin satplication.  
+   - Loads all required scripts and manages the **user interface** and **interactions** like moon phase changes and modals.  
+   - Uses **Pako.js compression** to minimize file size.
 
 2. **BRC333oracle_m.js**  
-   - Manages **oracle messaging** that responds to **block heights, offsets, and events**.
+   - Handles **oracle-based messaging** that responds to block events, offsets, and timelines.  
+   - Oracle messages are dynamic and can include **text, images, and links**. For example, during a **full moon**, the oracle can display special messages or visuals, enhancing in-world storytelling.
 
 3. **BRC333timetravel_m.js**  
-   - Implements time-based logic, allowing **reinscription-based updates** and exploration of ordinals’ past states.
+   - Manages **time travel mechanics**, allowing users to explore how their ordinals change over time.  
+   - Supports **reinscription-based updates** for ordinals and state changes at specific block heights.  
+   - Users can navigate through different block states and interact with events like **unlocking rare traits** or **executing commands** at certain blocks.
 
 4. **BRC333ui_m.js**  
-   - Controls **interactive elements**, such as modals, background changes, and time selectors.
+   - Controls the **interactive interface**, including background changes, time selectors, and modals.  
+   - Manages moon phase animations and displays dynamic information based on user actions.
 
 5. **BRC333utils_m.js**  
-   - Provides **utility functions** for trait management, moon phase calculations, and DMT integration.
+   - Provides utility functions for **trait scoring, data aggregation**, and **moon phase synchronization**.
 
 6. **BRC333dmt_m.js**  
-   - Handles **trait scoring, SVG rendering, and power assignments** for ordinals.
+   - The core logic module that integrates **DMT-based elements** into the satplication.  
+   - Manages **power values, SVG rendering, and block-based calculations**.
 
 7. **ng_prod.js**  
-   - **Core logic** for the NatGoblin collection, coordinating **DNA-based traits** and **RPG elements** with moon synchronization.
+   - Manages the main logic for the **NatGoblin satplication**.  
+   - Coordinates **DNA-based trait assignments**, moon-cycle transformations, and RPG-style power upgrades.  
+   - Handles interactions such as **click-based background changes** and time-travel-enabled modal displays.
 
 ---
 
-## Detailed Instructions for Oracle and Time Travel Configurations
+## **Oracle Configuration**
 
-### Oracle Configurations
+The Oracle module triggers **messages, actions, and visual events** based on block data, offsets, or events. These messages can also contain **images or links** to enhance interactivity.
 
-Example from **oracleDemoTrait.json**:
+### **Oracle JSON Input Specification**
+
+| Key        | Required | Description                                                  |
+| ---------- | -------- | ------------------------------------------------------------ |
+| `protocol` | YES      | Protocol to identify this as part of BRC333 (`"BRC333"`).    |
+| `operation`| YES      | Operation type (`"oracle"`).                                  |
+| `id`       | YES      | Unique identifier for the message.                           |
+| `message`  | YES      | Text to display when triggered.                              |
+| `block`    | NO       | Block number when the message will appear.                   |
+| `offset`   | NO       | Block offset from a previous event.                          |
+| `stop`     | NO       | Block when the message disappears.                           |
+| `link`     | NO       | Optional URL for additional information.                     |
+| `image`    | NO       | Optional image URL to display with the message.              |
+| `project`  | NO       | Specifies the project that the message belongs to.           |
+
+### **Example Oracle Configuration**
 
 ```json
 {
   "protocol": "BRC333",
   "operation": "oracle",
-  "description": "This is an oracle demo for the BRC333 protocol on Fractal Bitcoin.",
+  "description": "Oracle demo for NatGoblin.",
   "messages": [
     {
-      "id": "welcome",
+      "id": "moon_event",
       "action": "add",
-      "offset": 100,
+      "block": 888888,
+      "message": "The full moon rises, and the goblins awaken!",
+      "image": "https://example.com/full_moon.png",
       "link": "https://brc333.xyz",
-      "message": "The NatGoblin Oracle whispers: Welcome, Brown Wolf! The night favors your hunt.",
-      "project": "Brown Wolf"
-    },
-    {
-      "id": "update_test",
-      "action": "add",
-      "offset": 100,
-      "stop": 110,
-      "message": "White Wolf, the moon beckons you!",
-      "project": "White Wolf"
-    },
-    {
-      "id": "900000",
-      "action": "add",
-      "block": 900000,
-      "link": "https://brc333.xyz",
-      "message": "Block 900,000 has arrived! With it comes the whispers of change."
+      "project": "NatGoblin"
     }
   ]
 }
@@ -106,34 +123,46 @@ Example from **oracleDemoTrait.json**:
 
 ---
 
-### Time Travel Configurations
+## **Time Travel Configuration**
 
-Example from **timeTravelDemo.json**:
+The Time Travel module allows users to **explore the evolution of their ordinals over time** by processing **block-based events and reinscriptions**.
+
+### **Time Travel JSON Input Specification**
+
+| Key        | Required | Description                                                  |
+| ---------- | -------- | ------------------------------------------------------------ |
+| `protocol` | YES      | Protocol to identify this as part of BRC333 (`"BRC333"`).    |
+| `operation`| YES      | Operation type (`"timetravel"`).                              |
+| `id`       | YES      | Unique identifier for the timeline entry.                    |
+| `block`    | NO       | Block height when the action occurs.                         |
+| `offset`   | NO       | Offset block height for temporary actions.                   |
+| `stop`     | NO       | Block height at which the event ends.                        |
+| `type`     | YES      | Action type (`data`, `code`, `replace`, `command`, etc.).    |
+| `payload`  | YES      | Data or code to execute.                                      |
+| `project`  | NO       | Specifies the project to which the entry belongs.            |
+
+### **Example Time Travel Configuration**
 
 ```json
 {
-  "timetravel": [
+  "protocol": "BRC333",
+  "operation": "timetravel",
+  "timelineEntries": [
     {
-      "id": "moon_phase_change",
-      "block": 888888,
-      "action": "replace",
-      "target": "background",
-      "value": "full_moon"
-    },
-    {
-      "id": "unveil_traits",
+      "id": "unlock_powers",
       "block": 900000,
-      "action": "add",
-      "target": "rare_traits",
-      "value": "uncovered"
+      "type": "data",
+      "payload": { "powerLevel": 10 },
+      "project": "NatGoblin"
     },
     {
-      "id": "lock_traits",
-      "offset": 1000,
-      "stop": 1100,
-      "action": "replace",
-      "target": "traits",
-      "value": "common_only"
+      "id": "change_background",
+      "offset": 100,
+      "type": "replace",
+      "payload": {
+        "funcName": "updateBackground",
+        "funcBody": "document.body.style.backgroundColor = 'green';"
+      }
     }
   ]
 }
@@ -141,39 +170,44 @@ Example from **timeTravelDemo.json**:
 
 ---
 
-## How to Run the Application Locally
+## **How to Run the Application Locally**
 
 1. **Clone the Repository**:
    ```bash
-   git clone https://github.com/Bridgit-SPC/brc333/
-   cd brc333
+   git clone https://github.com/Bridgit-SPC/brc333
    ```
 
-2. **Open ng_prod.htm** to access the NatGoblin interface.
+2. Open **ng_prod_local.htm** in your browser to access the local NatGoblin interface.
 
-3. **Compressed Logic**: Scripts use **Pako.js** for block space optimization.
+3. To create your own satplication based on the NatGoblin satplication, follow these steps:
+
+a. Make your desired changes in ng_local.js
+b. Compress the modified file
+```node compress ng_prod.js```
+c. Copy the compressed output in /decompress/decompress_ng_local.js into the main satplication script /decompress/ng_prod_local.js and then open **ng_prod_local.htm**
+
 
 ---
 
-## How to Contribute
+## **How to Contribute**
 
-Submit issues and pull requests through GitHub.
+Submit **issues or pull requests** through GitHub.
 
 ---
 
-## Resources
+## **Resources**
 
 - [BRC333 Protocol](https://brc333.xyz)  
-- [Pachaverse](https://pachaverse.io)
+- [Pachaverse](https://pachaverse.io)  
 
 ---
 
-## License
+## **License**
 
-Licensed under the **GPL-3.0 License**.
+Licensed under the **MIT License**.
 
 ---
 
-## Credits
+## **Credits**
 
-Thanks to **Shiftshapr** and the BRC333 community for building the NatGoblin satplication.
+Special thanks to **Shiftshapr** and the BRC333 community for building the NatGoblin satplication.
