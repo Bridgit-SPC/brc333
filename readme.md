@@ -179,15 +179,17 @@ The Time Travel module allows users to **explore the evolution of their ordinals
 
 2. Open **ng_prod_local.htm** in your browser to access the local NatGoblin interface.
 
-3. To create your own satplication based on the NatGoblin satplication, follow these steps:
+## To create your own satplication based on the NatGoblin satplication, follow these steps:
 
-a. Make your desired changes in ng_local.js
-b. Compress the modified file
+1. Make your desired changes in ```ng_local.js```
+2. Compress the modified file
 ```node compress ng_prod.js```
-c. Copy the compressed output in /decompress/decompress_ng_local.js into the main satplication script /decompress/ng_prod_local.js and then open **ng_prod_local.htm**
-
+3. Copy the compressed output in ```/decompress/decompress_ng_local.js``` into the main satplication script ```/decompress/ng_prod_local.js``` and then open **ng_prod_local.htm** in the browser.
+4. You may want to create new data inscriptions for timetravel and oracle, in which case you need to modify ```/json/src_prod.json``` and add the new sat number in the ```"sat"``` field of ```/decompress/ng_prod_local.js```.
+5. To inscribe, you will need to modify ```/decompress/ng_prod_local.js``` to set testing = false and remove the references to ```https://ordinals.com/```
 
 ---
+
 
 ## **How to Contribute**
 
