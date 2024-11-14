@@ -1,16 +1,48 @@
 # **BRC333 Satplications: Dynamic Ordinals on Bitcoin**
 
-### **Overview**  
-BRC333 satplications extend the potential of Bitcoin ordinals by enabling **interactive and evolving digital artifacts**. Satplications operate through **modular scripts and recursive inscriptions** tied to designated satoshis, making them easily updatable and interactive. These applications may use **Digital Matter Theory (DMT)** to construct ordinal collections that are based on Bitcoin blockdata. 
+## **BRC333 Satplications: Interactive and Evolving Bitcoin Ordinals**
+BRC333 satplications extend the possibilities of Bitcoin ordinals by enabling interactive, dynamic, and evolving digital artifacts. Powered by modular scripts and recursive inscriptions tied to specific satoshis, satplications are updatable, interactive, and inherently decentralized. By leveraging **Digital Matter Theory (DMT)**, these applications can build collections and artifacts rooted in Bitcoin’s immutable block data.
 
-The key thing about a satplication is that the code lives on specific sats. Satplictaions are quite literally stacks of sats. There are no smart contracts, no gas fees, and no need to worry about the Bitcoin blockchain's scaling issues. Once a satplication is deployed it will be freely accessible for the the foreseeable future. Satplications have three types of sats: controller, logic, and data. The controller sat is the sat that controls the satplication. The logic sats are the sats that contains the code modules for the satplication. The data sats are the sats that recieve data for the satplication. The controller sat identifies that specific logic and data sats that belong to the satplication. When a logic sat is called, the satplictaion looks for the last version of the module that has been inscribed to the sat. When a data sat is polled, the satplication gets all the inscriptions that have been inscribed to the sat. To update the satplication code, a new logic scriptis insribed to the deisgnated sat. To change the behavior, one or more of the data sats is reinscribed with new data to be processed. 
+### What Makes Satplications Unique?
+At their core, satplications are stacks of sats where the application code resides directly on specific satoshis. There are no smart contracts, gas fees, or scalability concerns typically associated with blockchain systems. Once deployed, a satplication remains accessible indefinitely, powered by Bitcoin's robust infrastructure.
 
-Two key features powering these applications are the **Oracle module** and **Time Travel module**. Together, they allow ordinals to **respond dynamically to block data, time-based events, user interactions, and reinscriptions**.
+Satplications are composed of three primary types of sats:
+- **Controller Sats**: Govern the satplication, linking the logic and data components.
+- **Logic Sats**: Contain modular code for the satplication, enabling functionality and updates.
+- **Data Sats**: Store user data or state, evolving through reinscriptions.
 
-- **Oracle Module**: Delivers context-sensitive messages, actions, and visual changes based on **block height triggers, offsets, or events**. The oracle provides in-world messaging or announcements that reflect events in the Bitcoin blockchain or satplication world.  
-- **Time Travel Module**: Allows ordinals to **change their state across different blocks and timelines** by processing reinscriptions dynamically. Users can explore the historical or future states of their ordinals and interact with traits, visual components, or functionality tied to specific moments in the blockchain timeline.
+The controller sat orchestrates the satplication, identifying which logic and data sats are active. When invoked:
 
-These features make BRC333 satplications highly versatile, supporting **interactive storytelling, gamified experiences, and evolving digital collectibles**. In the **NatGoblin satplication**, these modules enable moon-cycle-based transformations, power upgrades, and interactive timelines.
+- The logic sats provide the most recent version of the inscribed code modules.
+- The data sats return all associated inscriptions, which can be updated through reinscriptions.
+
+### Updating a Satplication
+- **Logic Update**: Inscribe new code to the designated logic sat to enhance or modify functionality.
+- **Behavior Update**: Reinscribe new data to the relevant data sats, dynamically changing the satplication's behavior or state.
+
+### Core Features: Oracle and Time Travel Modules
+Three innovative modules enhance the flexibility and interactivity of satplications:
+
+1. **Oracle Module**
+- Delivers context-sensitive actions, messages, and visual changes based on real-time blockchain events, such as block height or specific triggers.
+- Enables dynamic storytelling, in-world messaging, and Bitcoin-driven announcements.
+
+2. **Time Travel Module**
+- Empowers ordinals to evolve across blockchain timelines, enabling historical or future states based on reinscriptions.
+- Supports interactive experiences tied to specific moments in Bitcoin’s block history.
+
+3. **DMT Module**
+- Integrates Digital Matter Theory (DMT) to construct ordinals based on blockdata.
+- Manages traits, rarities, and one-of-ones based on patterns in the block or nonce data.
+- Assigns power values to ordinals based on traits.
+
+### Applications and Potential
+Satplications unlock new possibilities for interactive storytelling, gamification, and evolving digital collectibles. For example, the NatGoblin Satplication incorporates:
+- Moon-cycle-based transformations aligned with real lunar phases.
+- Power upgrades and dynamic traits.
+- Interactive timelines that evolve through reinscriptions and user interactions.
+
+With BRC333 satplications, the Bitcoin blockchain becomes a canvas for creative, dynamic, and truly decentralized digital experiences.
 
 ---
 
