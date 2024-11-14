@@ -1,5 +1,3 @@
-# **BRC333 Satplications: Dynamic Ordinals on Bitcoin**
-
 ## **BRC333 Satplications: Interactive and Evolving Bitcoin Ordinals**
 BRC333 satplications extend the possibilities of Bitcoin ordinals by enabling interactive, dynamic, and evolving digital artifacts. Powered by modular scripts and recursive inscriptions tied to specific satoshis, satplications are updatable, interactive, and inherently decentralized. By leveraging **Digital Matter Theory (DMT)**, these applications can build collections and artifacts rooted in Bitcoin’s immutable block data.
 
