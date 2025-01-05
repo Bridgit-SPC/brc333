@@ -1,0 +1,15 @@
+{   
+    "protocol": "BRC333",
+    "operation": "source",
+    "description": "The scripts and JSON configuration data inscriptions that govern the NatGoblins BRC333 satplication.",
+    "sources":  [
+        { "script": "Oracle", "sat": "1742692208973887","backup": "0297d5bed2c77dab9ea426e32f03c124362b54675faf726a5b51d87a810baf1di0" },
+        { "script": "TimeTravel", "sat": "1742692208923721", "backup": "278f60cd0e6d22d8805f68ecf21056ffd5308497a1838ead2a63f4662e053e2fi0" },
+        { "script": "Utils", "sat": "1742692208940665", "backup": "875f6c2e957b35918e123c0fdf2e97d991bf496738bd64f074612ffd294e539di0" },
+        { "script": "UI", "sat": "1742692208933732", "backup": "b8e677c878bca113269067ea43db5216a2269aed81208d4182080bd742ee379ai0" },
+        { "script": "DMT", "sat": "1742692208869520", "backup": "40a2e07b8729cfacec3cb63f36db6a0823dbf84f12894490c7cd196597607c2di0" },
+        { "oracle": "natgoblins", "sat": 1882867286220010, "skip": 0, "backup": "333b38ab055ce8c6fe2667446740b0c890c74abcf165346490c800f042f0916fi0" }, 
+        { "oracle": "trait", "sat": 1882867286220556, "skip": 0, "filter": "displayTraits", "backup": "6d9927566fc3896c64a7cf90a8aa66df634b524f08dde2fce70734d4af5fdf8fi0" },
+        { "system": "natgoblins", "sat": 1742692208971677, "skip": 0, "backup": "3bdfdc1e1c80e7ffe7df89a16a5004a9c5659afe99a8c64b5875787dd2ac4a34i0" }
+    ]
+}
