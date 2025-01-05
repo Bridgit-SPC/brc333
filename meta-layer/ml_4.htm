@@ -1,0 +1,458 @@
+<!------------------------------------------------------------------------------------------------------------------
+//  meta-layer.htm
+//  The Meta-Layer Call for Input satplication script 
+//  
+//  This script loads the satplication logic and BRC333 Docs module and executes logic script
+//
+//  Created: Shiftshapr (2024-11-1)
+//  **********************************************************************************************************
+//  About the BRC333 Protocol and Satplications:
+//  The BRC333 Dynamic Ordinals protocol, developed by Bridgit DAO, revolutionizes Bitcoin by introducing 
+//  satplications—modular, decentralized applications (dApps) built directly on the blockchain. Satplications 
+//  harness Bitcoin's unmatched security and permanence to create immutable, future-proof systems without 
+//  relying on smart contracts or gas fees.
+//
+//  What are Satplications?
+//  Satplications are dynamic stacks of satoshis that integrate logic and data through recursive inscriptions. 
+//  This innovative design enables:
+//  - Immutable applications that endure as long as Bitcoin exists.
+//  - Continuous adaptability, allowing seamless updates over time.
+//  - A decentralized foundation, free from censorship and scalable for global adoption.
+//
+//  Key Features of BRC333 Satplications:
+//  - Reinscription-based updates, enabling dynamic state changes and evolvable behavior.
+//  - Time-sensitive triggers tied to specific block heights for scheduling updates and events.
+//  - Modular architecture for structured information management across code, data, and configuration sats.
+//  - Immutable data preservation combined with adaptive logic for future-proof applications.
+//  - Multi-layered interaction systems, supporting complex relationships between state, data, and logic sats.
+//  - Cross-blockchain synchronization for integrating and connecting distributed information networks.
+//
+//  Why BRC333 Matters:
+//  BRC333 transforms Bitcoin from a passive ledger into an active, decentralized platform for innovation. 
+//  Satplications empower developers to create interactive, self-sustaining systems that redefine what’s 
+//  possible on Bitcoin, without the constraints of traditional smart contract platforms.
+//
+//  For more information on BRC333 and satplications, visit https://brc333.xyz
+//  ******************************************************************************************************-->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Help Shape the Future of the Web</title>
+    <style>
+        html, body {
+            background: black;
+            margin: 0;
+            padding: 0;
+            height: 100%;
+        }
+        img[alt="Future of the Web"] {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <img id="initial-image" src="" alt="Future of the Web">
+        <h1 class="title"></h1>
+        <div class="preface" id="preface"></div>
+        <div class="content" id="content"></div>
+    </div>
+
+    <script>
+
+        /**
+         * Fetches metadata from a given URL
+         * @param {string} url - The URL to fetch metadata from
+         * @param {boolean} retry - Whether to retry the fetch if it fails
+         * @returns {Promise<Object>} The fetched metadata
+         */
+         async function getMetadata(url, retry = false) {
+            if (testing) console.log('Fetching metadata from:', url);
+            try {
+                const response = await fetch(url);
+                const text = await response.text();
+                try {
+                    return JSON.parse(text);
+                } catch {
+                    // If not JSON, return text
+                    return text;
+                }
+            } catch (error) {
+                console.error('Error fetching metadata:', error);
+                if (!retry) {
+                    const timestamp = Math.floor(Date.now() / (60000 * 10)); // 10 minutes
+                    const newUrl = `${url}?timestamp=${timestamp}`;
+                    return getMetadata(newUrl, true);
+                }
+                throw error;
+            }   
+        }
+
+        /* Loads a script dynamically
+        * @param {string} url - The URL of the script to load
+        * @returns {Promise} Resolves when the script is loaded
+        */
+        function loadScript(url) {
+            return new Promise((resolve, reject) => {
+                const script = document.createElement('script');
+                script.src = url;
+                script.onload = resolve;
+                script.onerror = reject;
+                document.head.appendChild(script);
+            });
+        }
+
+        /**
+         * Gets the content of a specific inscription
+         * @param {isSat} - true if it is a satoshi
+         * @param {string} id - The satoshi number or the inscriptionId 
+         * @returns {Promise<Object|null>} The inscription content or null if not found
+         */
+         async function getInscriptionContent(id, isJson = false) {
+            const url = `${baseUrl}/content/${id}`;
+            if (testing) console.log('url', url);
+            try {
+                const response = await fetch(url);
+                if (isJson) {
+                    return await response.json();
+                }
+                return await response.text();
+            } catch (error) {
+                console.error(`Error fetching content for inscription ${id}:`, error);
+                return null;
+            }
+        }
+
+        /**
+         * Retrieves inscriptions for a specific sat
+         * @param {number} sat - The sat number to check
+         * @param {string} backup - Backup inscription number in case the API is not working as expected
+         * @param {boolean} last - Only return the last inscription on the sat, defaults to false
+         * @param {Object} options - Additional options for fetching inscriptions
+         * @returns {Promise<Array>} Array of inscription IDs
+         */
+        async function getInscriptionsForSat(sat, last = false, backup = null, skip = null) {    
+            if (testing) console.log('Checking sat for inscriptions:', sat);
+            if (sat === undefined) {
+                console.error('Invalid sat: undefined');
+                return [];
+            }
+
+            let allInscriptionIds = [];
+            let totalSkipped = 0;
+            let totalFetched = 0;
+
+
+            if (last) {
+                const url = `${baseUrl}/r/sat/${sat}/at/-1`;
+                try {
+                    const response = await getMetadata(url);
+                    allInscriptionIds = [response];
+                } catch (error) {
+                    console.error(`Error fetching last inscription for sat ${sat}:`, error);
+                }
+            } else {
+                let page = 0;
+                let hasMore = true;
+                while (hasMore) {
+                    const url = page === 0
+                        ? `${baseUrl}/r/sat/${sat}`
+                        : `${baseUrl}/r/sat/${sat}/${page}`;
+
+                    try {
+                        const response = await getMetadata(url);
+                        if (response && Array.isArray(response.ids)) {
+                            const remainingToSkip = Math.max(skip - totalSkipped, 0);
+                            const newIds = response.ids.slice(remainingToSkip);
+                            totalSkipped += Math.min(remainingToSkip, response.ids.length);
+                            totalFetched += newIds.length;
+
+                            allInscriptionIds = allInscriptionIds.concat(newIds);
+                            
+                            hasMore = response.more;
+                            if (testing) console.log(`Fetched ${newIds.length} IDs for sat ${sat} on page ${page}, total skipped: ${totalSkipped}, total fetched: ${totalFetched}`);
+                            page++;
+                        } else {
+                            console.warn(`Unexpected response format for sat ${sat}:`, response);
+                            hasMore = false;
+                        }
+                    } catch (error) {
+                        console.error(`Error fetching inscription IDs for sat ${sat}:`, error);
+                        hasMore = false;
+                    }
+                }
+            }
+            if (allInscriptionIds.length === 0 && backup && totalFetched == 0 && (!skip || skip === 0)) {
+                allInscriptionIds = [backup];
+            }
+
+            return allInscriptionIds;
+        }
+
+        /**
+         * Fetches inscriptions for specified oracle strings.
+         * @param {string[]} oracleStrings - An array of oracle string identifiers.
+         * @returns {Promise<Object>} An object containing:
+         *   - scripts: Object with script names as keys and their corresponding sat numbers as values.
+         *   - oracles: Array of objects, each containing sat, skip, and filter properties for oracle inscriptions.
+         *   - timeTravels: Array of objects, each containing sat, skip, and filter properties for time travel inscriptions.
+         */
+        async function fetchInscriptions(satplication, oracleStrings) {
+            let scripts = {};
+            let scriptBackups = {};
+            let oracles = [];
+            let timeTravels = [];
+            let layout = [];
+            const configId = await getInscriptionsForSat(satplication, true);                         
+            const content = await getInscriptionContent(configId[0].id, true);
+
+            if (testing) console.log('content',content,'\noracleStrings',oracleStrings);
+            if (content && content.protocol === 'BRC333' && content.operation === 'source') {
+                for (let source of content.sources) {
+                    if (testing) console.log('source',source);
+                    if (source.script) {
+                        if (source.src || source.sat) {
+                            scripts[source.script] = source.src || source.sat;
+                            if (source.backup) {
+                                scriptBackups[source.script] = source.backup;
+                            }
+                        }
+                    } else if (source.oracle && oracleStrings.includes(source.oracle)) {
+                        const existingIndex = oracles.findIndex(o => o.sat === source.sat);
+                        if (existingIndex !== -1) {
+                            oracles[existingIndex] = { 
+                                sat: source.sat, 
+                                skip: source.skip,
+                                filter: source.filter,
+                                backup: source.backup
+
+                            };
+                        } else {
+                            oracles.push({ 
+                                sat: source.sat, 
+                                skip: source.skip,
+                                filter: source.filter,
+                                backup: source.backup 
+                            });
+                        }
+                    } else if (source.layout) {
+                        if (oracleStrings.includes(source.layout))
+                            layout.push({ 
+                                sat: source.sat, 
+                                skip: source.skip,
+                                filter: source.filter,
+                                backup: source.backup 
+                            });
+                    } else if (source.articles) {
+                        if (oracleStrings.includes(source.articles))
+                            articles.push({ 
+                                sat: source.sat, 
+                                skip: source.skip,
+                                filter: source.filter,
+                                backup: source.backup 
+                            });
+                    } else if (source.system) {
+                        if (oracleStrings.includes(source.system))
+                                timeTravels.push({ 
+                                    sat: source.sat, 
+                                    skip: source.skip,
+                                    filter: source.filter,
+                                    backup: source.backup 
+                                });
+                    } else if (source.key) {
+                        if (testing) console.log('source.value', source.value);    
+                        if (typeof source.value === 'string' && ( source.value.startsWith('[') || source.value.startsWith('{'))) {
+                            eval(`window.${source.key} = ${source.value}`);
+                        } else {
+                            window[source.key] = source.value;
+                        }             
+                    }
+                }
+                if (testing) console.log('scripts', scripts);
+                for (const [scriptName, scriptSrc] of Object.entries(scripts)) {
+                    if (typeof scriptSrc === 'string') {
+                        await loadScript(scriptSrc);
+                    } else {
+                        const scriptId = await getInscriptionsForSat(scriptSrc, true); 
+                        const scriptUrl = `${baseUrl}/content/${scriptId[0].id}`;
+                        await loadScript(scriptUrl);
+                    }
+                }
+            }
+            return { scripts, oracles, timeTravels, layout, articles };
+        }
+
+        /**
+         Appends the loading graphic to the image container  
+        * @param {string} loading - The inscription id of the loading graphic
+        */
+        const loadingGif = document.createElement('img');
+        function showLoadingGif(loadingId, container = document.body) {
+            const styleSheet = document.createElement('style');
+            styleSheet.textContent = `
+                #loading-gif {
+                    width: 100px !important;
+                    max-width: 100px !important;
+                    min-width: 100px !important;
+                    z-index: 0 !important;
+                }
+            `;
+            document.head.appendChild(styleSheet);
+            loadingGif.style.width = "100px";
+            loadingGif.src = `${baseUrl}/content/${loadingId}`;
+            loadingGif.id = 'loading-gif';
+            loadingGif.style.position = 'absolute';
+            loadingGif.style.top = '50%';
+            loadingGif.style.left = '50%';
+            loadingGif.style.transform = 'translate(-50%, -50%)';
+            loadingGif.style.height = 'auto';
+            loadingGif.style.zIndex = 0;
+            loadingGif.style.display = "block";
+            container.appendChild(loadingGif);
+        }
+
+        const testing = false;
+        const loadingId = "671b9b158a5fba9c85d62e6bb343688a7a4096d5c7546add0966083f79ce6799i0";
+        const satplication = 1055369956053199;
+        const oracleStrings = ["meta-layer", "trait"];
+        
+        let currentPage = 1;
+        let articles = [];
+        let spansToArticles = [];
+        let filteredResults, callForInputId; 
+        let timeTravelUrl, oracleUrl, docsUrl, oracleSats, sysTimeTravelSat, layoutSat, articleSat;
+        let height, blockheight, timestamp, sat, number, inscriptionId;
+        let description, brc333message, chain, medium, protocol;
+        let ITEMS_PER_PAGE, searchPlaceholder, sourceId, linkListTitle;
+        
+        window.currentArticle = null;
+
+        let baseUrl = '';
+        if (testing) baseUrl = 'https://ordinals.com';
+        console.log('baseUrl:', baseUrl);
+
+        /**
+         * Initializes the satplication
+         * @returns {Promise<void>}
+         */
+        async function initSatplication() {
+            const container = document.querySelector('.container');
+            showLoadingGif(loadingId, container);
+  
+            const result = await fetchInscriptions(satplication, oracleStrings);
+
+            if (testing) console.log('result',result);
+            timeTravelUrl = result.scripts['TimeTravel'];
+            oracleUrl = result.scripts['Oracle'];
+            
+            layoutSat = result.layout[0];
+            articleSat = result.articles[0];
+            oracleSats = result.oracles;
+            sysTimeTravel = result.timeTravels[0];
+            setFavicon(window.faviconId);
+
+            inscriptionId = await getInscriptionId( window.location.href, "5b5566686e9909cbf7fe987c386bc213b606c07ad948ef6d4e3dbc90f5bdec6ei0");
+            if (testing) console.log('inscriptionId',inscriptionId);
+
+            const urlParams = new URLSearchParams(window.location.search);
+            const targetId = urlParams.get('id');
+
+            if (targetId) {
+                loadStyles();
+                await loadMarked();
+                await fetchLayoutContent();
+                articles = await fetchArticles(); 
+                filteredResults = articles; 
+
+                const targetArticle = articles.find(article => article.id === targetId);
+                if (targetArticle) {
+                    const initialImage = document.getElementById('initial-image');
+                    if (initialImage) initialImage.style.display = 'none';
+                    
+                    const preface = document.getElementById('preface');
+                    if (preface) preface.style.display = 'none';
+                    
+                    await displayArticle(targetArticle);
+                    if (loadingGif) loadingGif.remove();
+                    return;
+                }
+            }
+
+            executeHook('initSaplication.start', { articles });
+            executeHook('callForInput.script.start', { articles });
+
+            loadStyles();
+            await loadMarked();
+            await fetchLayoutContent();
+            articles = await fetchArticles(); 
+            filteredResults = articles; 
+
+            const initialImage = document.getElementById('initial-image');
+            initialImage.style.display = 'block';
+            initialImage.style.opacity = '1';
+            
+            createSearchableInterface(window.sourceId);
+
+            await displayArticleLinks(articles);
+
+            if (typeof window.endMessage !== 'undefined' && window.endMessage) {
+                const preface = document.getElementById('preface');
+                const iMessage = document.createElement('p');
+                iMessage.innerHTML = window.endMessage;
+                iMessage.className = 'endMessage';
+                iMessage.id = 'firstEndMessage';
+                iMessage.style.color = 'var(--color-text)';
+                iMessage.style.marginTop = '1em';
+                iMessage.style.fontSize = '0.85em';
+                preface.appendChild(iMessage);
+            }
+
+            const title = document.querySelector('.title');
+            title.style.display = 'block';
+            
+            const preface = document.getElementById('preface');
+            const content = document.getElementById('content');
+            const lfgButton = document.getElementById('lfgButton');
+            const prefaceButton = document.getElementById('prefaceButton');
+            const restartButton = document.getElementById('restartButton');
+            
+            container.addEventListener('mouseover', handleMouseOver);
+
+            if (loadingGif) loadingGif.remove();
+
+            createListeners();
+
+            console.log('hookSat', hookSat);
+            await processHookInscriptions(hookSat);
+            executeHook('test');
+            executeHook('initSaplication.end', { articles });
+            executeHook('callForInput.script.end', { articles });
+        }
+
+        document.addEventListener('click', (e) => {
+            if (e.target.classList.contains('endmessage-link')) {
+                e.preventDefault();
+                const targetId = e.target.dataset.id;
+                const targetArticle = cachedArticles.find(a => a.id === targetId);
+                console.log('targetArticle',targetArticle.title);
+                if (targetArticle) {
+                    const contentDiv = document.getElementById('content');
+                    if (!contentDiv) {
+                        const newContentDiv = document.createElement('div');
+                        newContentDiv.id = 'content';
+                        newContentDiv.className = 'content';
+                        document.querySelector('.container').appendChild(newContentDiv);
+                    }
+                    displayArticle(targetArticle);
+                }
+            }
+        });
+
+        document.addEventListener('DOMContentLoaded', initSatplication);
+
+    </script>
+</body>
+</html>

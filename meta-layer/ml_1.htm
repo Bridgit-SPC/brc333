@@ -1,0 +1,1037 @@
+<!------------------------------------------------------------------------------------------------------------------
+//  meta-layer.htm
+//  The Meta-Layer Call for Input satplication script 
+//  
+//  This script loads the satplication logic and BRC333 Docs module and executes logic script
+//
+//  Created: Shiftshapr (2024-11-1)
+//  **********************************************************************************************************
+//  About the BRC333 Protocol and Satplications:
+//  The BRC333 Dynamic Ordinals protocol, developed by Bridgit DAO, revolutionizes Bitcoin by introducing 
+//  satplications—modular, decentralized applications (dApps) built directly on the blockchain. Satplications 
+//  harness Bitcoin's unmatched security and permanence to create immutable, future-proof systems without 
+//  relying on smart contracts or gas fees.
+//
+//  What are Satplications?
+//  Satplications are dynamic stacks of satoshis that integrate logic and data through recursive inscriptions. 
+//  This innovative design enables:
+//  - Immutable applications that endure as long as Bitcoin exists.
+//  - Continuous adaptability, allowing seamless updates over time.
+//  - A decentralized foundation, free from censorship and scalable for global adoption.
+//
+//  Key Features of BRC333 Satplications:
+//  - Reinscription-based updates, enabling dynamic state changes and evolvable behavior.
+//  - Time-sensitive triggers tied to specific block heights for scheduling updates and events.
+//  - Modular architecture for structured information management across code, data, and configuration sats.
+//  - Immutable data preservation combined with adaptive logic for future-proof applications.
+//  - Multi-layered interaction systems, supporting complex relationships between state, data, and logic sats.
+//  - Cross-blockchain synchronization for integrating and connecting distributed information networks.
+//
+//  Why BRC333 Matters:
+//  BRC333 transforms Bitcoin from a passive ledger into an active, decentralized platform for innovation. 
+//  Satplications empower developers to create interactive, self-sustaining systems that redefine what’s 
+//  possible on Bitcoin, without the constraints of traditional smart contract platforms.
+//
+//  For more information on BRC333 and satplications, visit https://brc333.xyz
+//  ******************************************************************************************************-->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Help Shape the Future of the Web</title>
+    <style>
+        html, body {
+            background: black;
+            margin: 0;
+            padding: 0;
+            height: 100%;
+        }
+        img[alt="Future of the Web"] {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <img id="initial-image" src="" alt="Future of the Web">
+        <h1 class="title"></h1>
+        <div class="preface" id="preface"></div>
+        <div class="content" id="content"></div>
+    </div>
+
+    <script>
+
+        /**
+         * Fetches metadata from a given URL
+         * @param {string} url - The URL to fetch metadata from
+         * @param {boolean} retry - Whether to retry the fetch if it fails
+         * @returns {Promise<Object>} The fetched metadata
+         */
+         async function getMetadata(url, retry = false) {
+            if (testing) console.log('Fetching metadata from:', url);
+            try {
+                const response = await fetch(url);
+                const text = await response.text();
+                try {
+                    return JSON.parse(text);
+                } catch {
+                    // If not JSON, return text
+                    return text;
+                }
+            } catch (error) {
+                console.error('Error fetching metadata:', error);
+                if (!retry) {
+                    const timestamp = Math.floor(Date.now() / (60000 * 10)); // 10 minutes
+                    const newUrl = `${url}?timestamp=${timestamp}`;
+                    return getMetadata(newUrl, true);
+                }
+                throw error;
+            }   
+        }
+
+        /* Loads a script dynamically
+        * @param {string} url - The URL of the script to load
+        * @returns {Promise} Resolves when the script is loaded
+        */
+        function loadScript(url) {
+            return new Promise((resolve, reject) => {
+                const script = document.createElement('script');
+                //console.log('script',script);
+                script.src = url;
+                script.onload = resolve;
+                script.onerror = reject;
+                document.head.appendChild(script);
+            });
+        }
+
+        /**
+         * Retrieve the last inscription for a specific sat
+         * @param {number} sat - The sat number to check
+         * @returns {Promise<Array>} The id of the last inscription
+         */
+        async function getLastInscriptionForSat(sat) {
+            if (sat === undefined) {
+                console.error('Invalid sat: undefined');
+                return [];
+            }
+
+            try {
+                const response = await getMetadata(url);
+                return response.id;
+            } catch (error) {
+                console.error(`Error fetching last inscription for sat ${sat}:`, error);
+            }
+        }
+
+        /**
+         * Gets the content of a specific inscription
+         * @param {isSat} - true if it is a satoshi
+         * @param {string} id - The satoshi number or the inscriptionId 
+         * @returns {Promise<Object|null>} The inscription content or null if not found
+         */
+         async function getInscriptionContent(id, isJson = false) {
+            const url = `${baseUrl}/content/${id}`;
+            //console.log('url', url);
+            try {
+                const response = await fetch(url);
+                if (isJson) {
+                    return await response.json();
+                }
+                return await response.text();
+            } catch (error) {
+                console.error(`Error fetching content for inscription ${id}:`, error);
+                return null;
+            }
+        }
+
+        /**
+         * Retrieves inscriptions for a specific sat
+         * @param {number} sat - The sat number to check
+         * @param {string} backup - Backup inscription number in case the API is not working as expected
+         * @param {boolean} last - Only return the last inscription on the sat, defaults to false
+         * @param {Object} options - Additional options for fetching inscriptions
+         * @returns {Promise<Array>} Array of inscription IDs
+         */
+        async function getInscriptionsForSat(sat, last = false, backup = null, skip = null) {    
+            if (testing) console.log('Checking sat for inscriptions:', sat);
+            if (sat === undefined) {
+                console.error('Invalid sat: undefined');
+                return [];
+            }
+
+            let allInscriptionIds = [];
+            let totalSkipped = 0;
+            let totalFetched = 0;
+
+
+            if (last) {
+                const url = `https://ordinals.com/r/sat/${sat}/at/-1`;
+                try {
+                    const response = await getMetadata(url);
+                    allInscriptionIds = [response];
+                } catch (error) {
+                    console.error(`Error fetching last inscription for sat ${sat}:`, error);
+                }
+            } else {
+                let page = 0;
+                let hasMore = true;
+                while (hasMore) {
+                    const url = page === 0
+                        ? `https://ordinals.com/r/sat/${sat}`
+                        : `https://ordinals.com/r/sat/${sat}/${page}`;
+
+                    try {
+                        const response = await getMetadata(url);
+                        if (response && Array.isArray(response.ids)) {
+                            const remainingToSkip = Math.max(skip - totalSkipped, 0);
+                            const newIds = response.ids.slice(remainingToSkip);
+                            totalSkipped += Math.min(remainingToSkip, response.ids.length);
+                            totalFetched += newIds.length;
+
+                            allInscriptionIds = allInscriptionIds.concat(newIds);
+                            
+                            hasMore = response.more;
+                            if (testing) console.log(`Fetched ${newIds.length} IDs for sat ${sat} on page ${page}, total skipped: ${totalSkipped}, total fetched: ${totalFetched}`);
+                            page++;
+                        } else {
+                            console.warn(`Unexpected response format for sat ${sat}:`, response);
+                            hasMore = false;
+                        }
+                    } catch (error) {
+                        console.error(`Error fetching inscription IDs for sat ${sat}:`, error);
+                        hasMore = false;
+                    }
+                }
+            }
+
+            // If allInscriptionIds is empty and a backup is provided, use the backup
+            if (allInscriptionIds.length === 0 && backup && totalFetched == 0 && (!skip || skip === 0)) {
+                allInscriptionIds = [backup];
+            }
+
+            return allInscriptionIds;
+        }
+
+        /**
+         * Fetches inscriptions for specified oracle strings.
+         * @param {string[]} oracleStrings - An array of oracle string identifiers.
+         * @returns {Promise<Object>} An object containing:
+         *   - scripts: Object with script names as keys and their corresponding sat numbers as values.
+         *   - oracles: Array of objects, each containing sat, skip, and filter properties for oracle inscriptions.
+         *   - timeTravels: Array of objects, each containing sat, skip, and filter properties for time travel inscriptions.
+         */
+        async function fetchInscriptions(satplication, oracleStrings) {
+            let scripts = {};
+            let scriptBackups = {};
+            let oracles = [];
+            let timeTravels = [];
+            let layout = [];
+            let content;
+
+/***  Neeed to add code to treat ones that are on sats than ones that are webpages ***/
+/*** Need to handle updates in the activate and updates differently ***/
+/** fix the links --- maybe ***/
+
+            if (testing === false) content = await getInscriptionContent(true, satplication);
+            else content = 
+                {   
+                "protocol": "BRC333",
+                "operation": "source",
+                    "description": "The scripts and JSON configuration data inscriptions as well as key-value pairs to configure the Meta-Layer Call for Input satplication, which is powered by BRC333.",
+                "sources":  [
+                    { "script": "Oracle", "src": "https://natowls.xyz/brc333oracle.js","backup": null },
+                    { "script": "TimeTravel", "src": "https://natowls.xyz/brc333timetravel.js", "backup": null },
+                    { "script": "UI", "src": "https://natowls.xyz/brc333docsui.js", "backup": null },
+                    { "script": "Articles", "sat": "https://natowls.xyz/brc333articles.js", "backup": "f41f4015516f5d1c83924f391e2449d955858dada538f94e10121048ec9256b9i0" },
+                    { "script": "Tags", "src": "https://natowls.xyz/brc333tags.js", "backup": null },
+                    { "script": "Pagination", "src": "https://natowls.xyz/brc333pagination.js", "backup": null },
+                    { "script": "Data", "src": "https://natowls.xyz/brc333data.js", "backup": null },
+                    { "layout": "meta-layer", "sat": 1882867286409486, "skip": 0, "backup": "30edf1df44bcda73a9b707d469d8c898a910abc87f26021198864f63a4ca8fcai0" },
+                    { "articles": "meta-layer", "sat": 1954778638335406, "skip": 0, "backup": "c92aa2f29f20c94c380ad86cd836f41bfd519cc37492cf24c1680c531a6676d3i0" },
+                    { 
+                        "key": "spansToArticles", 
+                        "value": "[ { spanId: \"howToInscribe\", articleId: \"7c15d859d71fed6f2a31bdde7d11c0d16eefe4a580b31b9d9507dee401e3e082i0\" }, { spanId: \"call-for-input\", articleId: \"41b5ea02ed344cacfe828595491ca224f2e487052447b7d004c62ab323a1b6c4i0\" } ]" 
+                    },
+                    { "key": "hookSat", "value": 1954778638321042 },
+                    { "key": "lfgButtonText", "value": "Call For Input" },
+                    { "key": "callForInputId", "value": "41b5ea02ed344cacfe828595491ca224f2e487052447b7d004c62ab323a1b6c4i0" },
+                    { "key": "endMessage", "value": "<i>This Bitcoin satplication lays the cornerstone for the world's first decentralized information monument. Press 'i' for contextual insights. Learn <a href=\"#\" class=\"endmessage-link\" data-id=\"41b5ea02ed344cacfe828595491ca224f2e487052447b7d004c62ab323a1b6c4i0\">how to contribute your thoughts</a> and <a href=\"#\" class=\"endmessage-link\" data-id=\"7c15d859d71fed6f2a31bdde7d11c0d16eefe4a580b31b9d9507dee401e3e082i0\">how to inscribe</a>. ~ <a id=\"metalayerinitiativedotmeta\">metalayerinitiative.meta</a></i>" },
+                    { "key": "linkListTitle", "value": "Contents" },
+                    { "key": "sourceId", "value": "meta-layer-call-for-input" },
+                    { "key": "searchPlaceholder", "value": "Search contributions..." },
+                    { "key": "fontFamily", "value": "\"Helvetica Neue\", Helvetica, Arial, sans-serif" },
+                    { "key": "stylesSat", "value": 1117075618770135 },
+                    { "key": "titleTopOffset", "value": "35%" },
+                    { "key": "prefaceButtonText", "value": "CONTENTS" },
+                    { "key": "restartButtonText", "value": "REFRESH" },
+                    { "key": "ITEMS_PER_PAGE", "value": 10 },
+                    { "key": "chain", "value": "Bitcoin" },
+                    { "key": "medium", "value": "Ordinals" },
+                    { "key": "protocol", "value": "BRC333" },
+                    { "key": "primary", "value": "#00BFFF" },
+                    { "key": "primaryHover", "value": "#33CCFF" },
+                    { "key": "primaryVisited", "value": "#0099CC" },
+                    { "key": "background", "value": "#000000" },
+                    { "key": "border", "value": "#333333" },
+                    { "key": "text", "value": "#F0EAD6" },
+                    { "key": "accent", "value": "#87CEFA" },
+                    { "key": "titleColor", "value": "#FF4040" },
+                    { "key": "faviconId", "value": "2c6b0c9a4a933771672a71baffe055719db2b631a7422ef76dab8e53a3d1ca76i0" },
+                    { "key": "metadataBg", "value": "rgba(128, 128, 128, 0.1)" },
+                    { "key": "searchBg", "value": "rgba(255, 107, 0, 0.1)" },
+                    { "key": "meta-domain", "value": "metalayercallforinput.meta", "id": "00bb89cdd16d44e2418c21ee4a85ccfafde0651ad396541f0d4cdb56808f63afi0" },
+                    { "key": "description", "value": "<br><h1 class=\"title-text\">The Meta-Layer Initiative</h1><h2 class=\"subtitle-text\"> A Call for Input on </h2><h2 class=\"subtitle-text\"> The Desirable Properties of a Meta-Layer </span></h2><br><span class=\"normal\">The Meta-Layer Initiative aims to transform the web by creating a decentralized layer above existing webpages, enabling overlay applications, smart tags, and meta-communities. This innovative approach allows users to interact, collaborate, and share knowledge across platforms while maintaining data sovereignty and privacy. The Meta-Layer introduces features like real-time presence awareness, contextual interactions, and AI containment mechanisms. The project welcomes contributions from developers, community organizers, and anyone passionate about building a more trustworthy and secure internet.</span><span class=\"normal\">Press <strong>i</strong> while viewing any article to see its detailed metadata, including inscription details and blockchain information.</span>" },
+                    { "key": "brc333message", "value": "<span class=\"bold\">About the BRC333 Protocol and Satplications</span><span class=\"normal\">This satplication is implemented using the BRC333 Dynamic Ordinals protocol. The protocol, incubated by Bridgit DAO, redefines what is possible on Bitcoin and PoW chains by introducing satplications—decentralized, immutable, and future-proof applications built directly on the  blockchain. Satplications leverage Bitcoin's unparalleled security and permanence to deliver dynamic  functionality without smart contracts or gas fees.</span><span class=\"normal\">Satplications are modular stacks of satoshis, combining logic and data through recursive inscriptions. This architecture ensures: <ul><li>Immutable applications that persist as long as Bitcoin exists. <li>Seamless updates and evolvability, ensuring adaptability over time. <li>A foundation for decentralized systems, resistant to censorship and scaling limitations.</ul></span><span class=\"normal\">Key Features of BRC333 Satplications: <ul><li>Reinscription-based updates, enabling dynamic state changes and evolvable behavior.<li>Modular architecture for structured information management across code, data, and configuration sats.<li>Immutable data preservation combined with adaptive logic for future-proof applications.</li><li>Cross-chain synchronization for integrating and connecting distributed information networks.</li></ul></span><span class=\"normal\">With satplications, the Bitcoin blockchain becomes a platform for decentralized, interactive, and  future-proof applications. The protocol transforms Bitcoin from a passive ledger into an active,  self-sustaining system for innovation.</span><span class=\"normal\">For more info, visit <span class=\"outside-link\"><i>brc333.xyz</i></span> or <span class=\"meta-domain\"><i>brc333.meta</i>.</span>" }
+                ]
+            }
+
+            if (testing) console.log('content',content,'\noracleStrings',oracleStrings);
+            if (content && content.protocol === 'BRC333' && content.operation === 'source') {
+                for (let source of content.sources) {
+                    if (testing) console.log('source',source);
+                    if (source.script) {
+                        if (source.src || source.sat) {
+                            scripts[source.script] = source.src || source.sat;
+                            if (source.backup) {
+                                scriptBackups[source.script] = source.backup;
+                            }
+                        }
+                    } else if (source.oracle && oracleStrings.includes(source.oracle)) {
+                        const existingIndex = oracles.findIndex(o => o.sat === source.sat);
+                        if (existingIndex !== -1) {
+                            oracles[existingIndex] = { 
+                                sat: source.sat, 
+                                skip: source.skip,
+                                filter: source.filter,
+                                backup: source.backup
+
+                            };
+                        } else {
+                            oracles.push({ 
+                                sat: source.sat, 
+                                skip: source.skip,
+                                filter: source.filter,
+                                backup: source.backup 
+                            });
+                        }
+                    } else if (source.layout) {
+                        if (oracleStrings.includes(source.layout))
+                            layout.push({ 
+                                sat: source.sat, 
+                                skip: source.skip,
+                                filter: source.filter,
+                                backup: source.backup 
+                            });
+                    } else if (source.articles) {
+                        if (oracleStrings.includes(source.articles))
+                            articles.push({ 
+                                sat: source.sat, 
+                                skip: source.skip,
+                                filter: source.filter,
+                                backup: source.backup 
+                            });
+                    } else if (source.system) {
+                        if (oracleStrings.includes(source.system))
+                                timeTravels.push({ 
+                                    sat: source.sat, 
+                                    skip: source.skip,
+                                    filter: source.filter,
+                                    backup: source.backup 
+                                });
+                    } else if (source.key) {
+                        if (testing) console.log('source.value', source.value);    
+                        if (typeof source.value === 'string' && ( source.value.startsWith('[') || source.value.startsWith('{'))) {
+                            eval(`window.${source.key} = ${source.value}`);
+                        } else {
+                            //console.log('key-pair', `${source.key}, ${source.value}`);
+                            window[source.key] = source.value;
+                        }             
+                    }
+                }
+                if (testing) console.log('scripts', scripts);
+                for (const [scriptName, scriptSrc] of Object.entries(scripts)) {
+                    //console.log(`Loading script: ${scriptName}`);
+                    if (typeof scriptSrc === 'string') {
+                    await loadScript(scriptSrc);
+                    } else {
+                        console.log('baseUrl',baseUrl);
+                        const scriptId = await getInscriptionsForSat(scriptSrc, true); 
+                        const scriptUrl = `${baseUrl}/content/${scriptId[0].id}`;
+                        await loadScript(scriptUrl);
+                    }
+                }
+            }
+            return { scripts, oracles, timeTravels, layout, articles };
+        }
+
+        document.addEventListener('click', e => {
+            console.log('Global click event:', {
+                target: e.target,
+                classList: e.target.classList,
+                parentNode: e.target.parentNode,
+                eventPhase: e.eventPhase,
+                bubbles: e.bubbles,
+                stack: new Error().stack
+            }, e);
+        }, true);
+
+        /**
+         Appends the loading graphic to the image container  
+        * @param {string} loading - The inscription id of the loading graphic
+        */
+        const loadingGif = document.createElement('img');
+        function showLoadingGif(loadingId, container = document.body) {
+            const styleSheet = document.createElement('style');
+            styleSheet.textContent = `
+                #loading-gif {
+                    width: 100px !important;
+                    max-width: 100px !important;
+                    min-width: 100px !important;
+                    z-index: 0 !important;
+                }
+            `;
+            document.head.appendChild(styleSheet);
+            loadingGif.style.width = "100px";
+            loadingGif.src = `${baseUrl}/content/${loadingId}`;
+            loadingGif.id = 'loading-gif';
+            loadingGif.style.position = 'absolute';
+            loadingGif.style.top = '50%';
+            loadingGif.style.left = '50%';
+            loadingGif.style.transform = 'translate(-50%, -50%)';
+            loadingGif.style.height = 'auto';
+            loadingGif.style.zIndex = 0;
+            loadingGif.style.display = "block";
+
+            const resizeObserver = new ResizeObserver(entries => {
+                for (let entry of entries) {
+                    if (entry.contentRect.width !== 100) {
+                        console.log('Loading gif width changed to:', entry.contentRect.width);
+                        console.trace('Stack trace for width change');
+                    }
+                }
+            });
+            resizeObserver.observe(loadingGif);
+
+            container.appendChild(loadingGif);
+
+            console.log('Loading gif created with width:', loadingGif.offsetWidth);
+            loadingGif.onload = () => {
+                console.log('Loading gif loaded with width:', loadingGif.offsetWidth);
+            };
+        }
+
+        const testing = true;
+        const loadingId = "671b9b158a5fba9c85d62e6bb343688a7a4096d5c7546add0966083f79ce6799i0";
+        const satplication = 1882867286217244;
+        const oracleStrings = ["meta-layer", "trait"];
+        
+        let currentPage = 1;
+        let articles = [];
+        let spansToArticles = [];
+        let filteredResults, callForInputId; 
+        let timeTravelUrl, oracleUrl, docsUrl, oracleSats, sysTimeTravelSat, layoutSat, articleSat;
+        let height, blockheight, timestamp, sat, number, inscriptionId;
+        let description, brc333message, chain, medium, protocol;
+        let ITEMS_PER_PAGE, searchPlaceholder, sourceId, linkListTitle;
+        
+        window.currentArticle = null;
+
+        let baseUrl = '';
+        if (testing) baseUrl = 'https://ordinals.com';
+        console.log('baseUrl:', baseUrl);
+
+
+        const testMods = {
+            "p": "brc333",
+            "op": "modify",
+            "project": "meta-layer",
+            "updates": [
+                {
+                    "id": "41b5ea02ed344cacfe828595491ca224f2e487052447b7d004c62ab323a1b6c4i0",
+                    "author": "Bridgit DAO",
+                    "replace": { 
+                            "this": "Learn how at <i>https://bridgit.io/meta-layer/contribute.</i>",
+                            "with": "Follow these simple instructions on <span id=\"howToInscribe\" class=\"inline-link\">how to contribute</span>."
+                    }
+                }
+            ]
+        };
+
+        /**
+         * Initializes the satplication
+         * @returns {Promise<void>}
+         */
+        async function initSatplication() {
+            
+            const container = document.querySelector('.container');
+            showLoadingGif(loadingId, container);
+  
+            const result = await fetchInscriptions(satplication, oracleStrings);
+            if (testing) console.log('result',result);
+            timeTravelUrl = result.scripts['TimeTravel'];
+            oracleUrl = result.scripts['Oracle'];
+
+            layoutSat = result.layout[0];
+            console.log('layoutSat',layoutSat);
+
+            console.log('window.linkListTitle', window.linkListTitle);
+            console.log('window.fontFamily', window.fontFamily);
+            
+            articleSat = result.articles[0];
+            console.log('articleSat',articleSat);
+
+            oracleSats = result.oracles;
+            sysTimeTravel = result.timeTravels[0];
+
+            console.log('faviconId',window.faviconId);
+            setFavicon(window.faviconId);
+
+            inscriptionId = await getInscriptionId( window.location.href, "5b5566686e9909cbf7fe987c386bc213b606c07ad948ef6d4e3dbc90f5bdec6ei0");
+            if (testing) console.log('inscriptionId',inscriptionId);
+
+            const urlParams = new URLSearchParams(window.location.search);
+            const targetId = urlParams.get('id');
+
+            if (targetId) {
+                loadStyles();
+                await loadMarked();
+                await fetchLayoutContent();
+                articles = await fetchArticles(); 
+                filteredResults = articles; 
+
+                console.log('Articles loaded:', articles.length);
+                console.log('targetId',targetId);
+                const targetArticle = articles.find(article => article.id === targetId);
+                console.log('targetArticle',targetArticle);
+                if (targetArticle) {
+                    // Set up initial DOM state
+                    const initialImage = document.getElementById('initial-image');
+                    if (initialImage) initialImage.style.display = 'none';
+                    
+                    const preface = document.getElementById('preface');
+                    if (preface) preface.style.display = 'none';
+                    
+                    // Display target article
+                    await displayArticle(targetArticle);
+                    if (loadingGif) loadingGif.remove();
+                    return;
+                }
+            }
+
+            loadStyles();
+            await loadMarked();
+            await fetchLayoutContent();
+            articles = await fetchArticles(); 
+            filteredResults = articles; 
+
+            const initialImage = document.getElementById('initial-image');
+            initialImage.style.display = 'block';
+            initialImage.style.opacity = '1';
+            
+            createSearchableInterface(window.sourceId);
+
+            await displayArticleLinks(articles);
+
+            if (typeof window.endMessage !== 'undefined' && window.endMessage) {
+                const preface = document.getElementById('preface');
+                const iMessage = document.createElement('p');
+                iMessage.innerHTML = window.endMessage;
+                iMessage.className = 'endMessage';
+                iMessage.id = 'firstEndMessage';
+                iMessage.style.color = 'var(--color-text)';
+                iMessage.style.marginTop = '1em';
+                iMessage.style.fontSize = '0.85em';
+                preface.appendChild(iMessage);
+            }
+
+
+// Add after endMessage creation
+// Add this logging where the endmessage is created
+console.log('CSS Variables:', {
+    primary: getComputedStyle(document.documentElement).getPropertyValue('--color-primary'),
+    searchBg: getComputedStyle(document.documentElement).getPropertyValue('--color-search-bg')
+});
+
+// Log all stylesheet contents
+Array.from(document.styleSheets).forEach((sheet, index) => {
+    console.log(`Stylesheet ${index} contents:`, {
+        rules: Array.from(sheet.cssRules || []).map(rule => rule.cssText),
+        disabled: sheet.disabled,
+        media: sheet.media.mediaText
+    });
+});
+
+// Add this logging
+console.log('Main stylesheet rules:', Array.from(document.styleSheets[2].cssRules).map(rule => rule.cssText));
+
+
+
+// Add this where the endmessage links are created
+const endMessageLink = document.querySelector('.endmessage-link');
+if (endMessageLink) {
+    console.log('EndMessage Link Styles:', {
+        computedStyle: window.getComputedStyle(endMessageLink),
+        primaryColor: getComputedStyle(document.documentElement).getPropertyValue('--color-primary'),
+        linkColor: endMessageLink.style.color,
+        cssText: endMessageLink.style.cssText
+    });
+
+    // Check what rules are actually being applied
+    const styles = document.styleSheets;
+    const relevantRules = [];
+    for (let sheet of styles) {
+        try {
+            const rules = sheet.cssRules || sheet.rules;
+            for (let rule of rules) {
+                if (rule.selectorText && rule.selectorText.includes('endmessage-link')) {
+                    relevantRules.push({
+                        selector: rule.selectorText,
+                        styles: rule.style.cssText,
+                        specificity: calculateSpecificity(rule.selectorText)
+                    });
+                }
+            }
+        } catch (e) {
+            console.log('Cannot read rules from stylesheet:', e);
+        }
+    }
+    console.log('Matching CSS Rules:', relevantRules);
+}
+
+
+            const title = document.querySelector('.title');
+            title.style.display = 'block';
+            
+            // Initialize event listeners after content is loaded
+            const preface = document.getElementById('preface');
+            const content = document.getElementById('content');
+            const lfgButton = document.getElementById('lfgButton');
+            const prefaceButton = document.getElementById('prefaceButton');
+            const restartButton = document.getElementById('restartButton');
+            
+            container.addEventListener('mouseover', handleMouseOver);
+
+            if (loadingGif) loadingGif.remove();
+
+            createListeners();
+
+            console.log('hookSat', hookSat);
+            await processHookInscriptions(hookSat);
+            executeHook('test');
+            executeHook('ml.script.end', { articles });
+            executeHook('hamlet.script.end', { articles });
+        }
+
+        document.addEventListener('click', (e) => {
+            if (e.target.classList.contains('endmessage-link')) {
+                e.preventDefault();
+                const targetId = e.target.dataset.id;
+                const targetArticle = cachedArticles.find(a => a.id === targetId);
+                console.log('targetArticle',targetArticle.title);
+                if (targetArticle) {
+                    const contentDiv = document.getElementById('content');
+                    if (!contentDiv) {
+                        const newContentDiv = document.createElement('div');
+                        newContentDiv.id = 'content';
+                        newContentDiv.className = 'content';
+                        document.querySelector('.container').appendChild(newContentDiv);
+                    }
+                    displayArticle(targetArticle);
+                }
+            }
+        });
+
+    const temp =   {   
+    "p": "brc333",
+    "op": "activate",
+    "project": "meta-layer",
+    "articles": [
+        {
+            "id": "4778e24738b24435d18a59ef7e372d727268a666bbdf3edb2001316aa738b2f5i0",
+            "title": "Introduction to the Metaweb book",
+            "author": "Bridgit DAO",
+            "source": "The Metaweb: The Next Level the Internet",
+            "tags": ["Metaweb", "Metadata", "Data", "AI", "Privacy", "Vint Cerf"],
+            "bypassTheme": true
+        },
+        {
+            "id": "506480ff2a0ea8fb537d3e8a4bb298892c5e79ff3a1dedb49aa85d260151d52ai0",
+            "subject": "Meta-Layer Initiative Meeting on Sept 16 with special guest Vint Cerf",
+            "title": "Meta-Layer Initiative Meeting with Vint Cerf",
+            "author": "Daveed Benjamin",
+            "medium": "email",
+            "source": "PCI-Community-Calls (PCI-C)",
+            "tags": ["Metaweb", "Metadata", "Data", "AI", "Privacy","Vint Cerf"],
+            "date": "09 Sep 2024 15:56:20 -0700"
+        },
+        {
+            "id": "40ed20f0f7fb29118db4573c859a034dac5262eed595a91d0fbb2eb97a61e31ei0",
+            "subject": "Re: [i4j Forum] Re: [PCI-C] natural monopolies and internet Google.",
+            "title": "Anticipating PCEs and Meta-Layer Alignment",
+            "reply-to": "506480ff2a0ea8fb537d3e8a4bb298892c5e79ff3a1dedb49aa85d260151d52ai0",
+            "author": "Cindy Mason",
+            "medium": "email",
+            "source": "PCI-Community-Calls (PCI-C)",
+            "tags": ["Privacy", "Data", "AI", "Decentralization"],
+            "date": "09 Sep 2024 17:07:45 -0700"
+        },
+        {
+            "id": "977928768d12b50b7499b18cf4b8f62be21dccea47df1c6b6e74a357bde6ec46i0",
+            "subject": "Re: [i4j Forum] Re: [PCI-C] natural monopolies and internet Google.",
+            "reply-to": "40ed20f0f7fb29118db4573c859a034dac5262eed595a91d0fbb2eb97a61e31ei0",
+            "title": "Meta-Layer Initiative for Decentralized and Transparent Web",
+            "author": "Daveed Benjamin",
+            "tags": ["Decentralization", "AI", "Metaweb", "Collective Intelligence", "Data"],
+            "date": "11 Sep 2024 16:23:50 -0700"
+        },
+        {
+            "id": "6b4dd9afb7932c40c894094542050066e77e1ee4140a740608d4c92922493bc6i0",
+            "subject": "Re: [i4j Forum] Re: [PCI-C] natural monopolies and internet Google.",
+            "title": "Metalevel Initiative: Challenges and Opportunities",
+            "medium": "email",
+            "source": "PCI-Community-Calls (PCI-C)",
+            "author": "Paul Werbos",
+            "tags": ["Sustainability", "AI", "Collaboration"],
+            "date": "11 Sep 2024 16:35:06 -0700"
+        },
+        {
+            "id": "29f4bf588375190ac861a1845c545dd7cf835b823d809a494dec90c404457954i0",
+            "subject": "Re: [i4j Forum] Re: [PCI-C] natural monopolies and internet Google.",
+            "title": "AI-Enhanced Collective Intelligence for Global Challenges",
+            "medium": "email",
+            "source": "PCI-Community-Calls (PCI-C)",
+            "author": "David Bray, PhD",
+            "tags": ["Collective Intelligence", "AI", "Sustainability"],
+            "date": "12 Sep 2024 04:24:41 -0700"
+        },
+        {
+            "id": "7db0083a405c8de4f577d1812715d8c1000fd3300af778483e43ba03a90ca6b6i0",
+            "subject": "Re: [i4j Forum] Re: [PCI-C] natural monopolies and internet Google.",
+            "reply-to": "6b4dd9afb7932c40c894094542050066e77e1ee4140a740608d4c92922493bc6i0",
+            "title": "The Overweb: Building a Decentralized Meta-Layer",
+            "medium": "email",
+            "source": "PCI-Community-Calls (PCI-C)",
+            "author": "Daveed Benjamin",
+            "tags": ["Metaweb", "Metadata", "Decentralization", "Collaboration", "AI", "Overweb"],
+            "date": "12 Sep 2024 12:23:45 -0700"
+        },
+        {
+            "id": "958a79d80874a73c67b19782e31570f95b4be63a0287778ad38dd77a1a337df2i0",
+            "subject": "Re: [i4j Forum] Re: [PCI-C] natural monopolies and internet Google.",
+            "reply-to": "29f4bf588375190ac861a1845c545dd7cf835b823d809a494dec90c404457954i0",
+            "title": "Augmented Conversations and AI-Assisted Collaboration in the Overweb",
+            "medium": "email",
+            "source": "PCI-Community-Calls (PCI-C)",
+            "author": "Daveed Benjamin",
+            "tags": ["Collective Intelligence", "AI", "Collaboration", "Metaweb", "Interfaces", "Overweb"],
+            "date": "12 Sep 2024 13:39:51 -0700"
+        },
+        {
+            "id": "d55f9a5c0d1a319840b27a4bbfa791638a9ac1456c359f0a0a55bfcf211de90ei0",
+            "subject": "Re: [i4j Forum] Re: [PCI-C] natural monopolies and internet Google.",
+            "reply-to": "7db0083a405c8de4f577d1812715d8c1000fd3300af778483e43ba03a90ca6b6i0",
+            "title": "Defining Goals for Effective Collective Intelligence",
+            "medium": "email",
+            "source": "PCI-Community-Calls (PCI-C)",
+            "author": "David Bray, PhD",
+            "tags": ["Collective Intelligence", "Collaboration"],
+            "date": "12 Sep 2024 14:04:03 -0700"
+        },
+        {
+            "id": "94f1f8721c3ba0433d906b27b93769d7e35de01b1befef126552aec7434e942bi0",
+            "subject": "Re: [i4j Forum] Re: [PCI-C] natural monopolies and internet Google.",
+            "reply-to": "d55f9a5c0d1a319840b27a4bbfa791638a9ac1456c359f0a0a55bfcf211de90ei0",
+            "title": "Innovation Studios: Designing for Collective Intelligence in the Overweb",
+            "medium": "email",
+            "source": "PCI-Community-Calls (PCI-C)",
+            "author": "Daveed Benjamin",
+            "tags": ["Collective Intelligence", "Collaboration", "Metaweb", "Empowerment", "Innovation", "Overweb"],
+            "date": "12 Sep 2024 16:18:12 -0700"
+        },
+        {
+            "id": "205989194f8adac5f123ab97668ae9a43a4805e8df7d38ae6936f57efa11d43ci0",
+            "subject": "Re: [i4j Forum] Re: [PCI-C] natural monopolies and internet Google.",
+            "reply-to": "94f1f8721c3ba0433d906b27b93769d7e35de01b1befef126552aec7434e942bi0",
+            "title": "Future of Interaction: Moving Beyond Webpages",
+            "medium": "email",
+            "source": "PCI-Community-Calls (PCI-C)",
+            "author": "David Bray, PhD",
+            "tags": ["Internet Evolution", "Interfaces", "AI", "Decentralization"],
+            "date": "12 Sep 2024 16:33:05 -0700"
+        },
+        {
+            "id": "01edf3bd00e45332d94cdb0c525b977b803028609d9bcb95b7064ee79f308b74i0",
+            "subject": "Re: [i4j Forum] Re: [PCI-C] natural monopolies and internet Google.",
+            "reply-to": "94f1f8721c3ba0433d906b27b93769d7e35de01b1befef126552aec7434e942bi0",
+            "title": "Acknowledging Contributions in Collaborative Spaces",
+            "medium": "email",
+            "source": "PCI-Community-Calls (PCI-C)",
+            "author": "Cindy Mason",
+            "tags": ["Collaboration", "Empowerment"],
+            "date": "12 Sep 2024 17:26:44 -0700"
+        },
+        {
+            "id": "9157f643d37d1e9763159212f83b1680760e61d5a9a9efcf579381e4d08d5d90i0",
+            "subject": "Re: [i4j Forum] Re: [PCI-C] natural monopolies and internet Google.",
+            "reply-to": "94f1f8721c3ba0433d906b27b93769d7e35de01b1befef126552aec7434e942bi0",
+            "title": "Collective Intelligence and Brain Synchronization",
+            "medium": "email",
+            "source": "PCI-Community-Calls (PCI-C)",
+            "author": "Paul Werbos",
+            "tags": ["Collective Intelligence", "Sustainability", "Collaboration"],
+            "date": "12 Sep 2024 18:48:32 -0700"
+        },
+        {
+            "id": "3d7bc5d5e4c9dedc8e27d5bde7792266af194eeb99013edeec1ef0be0f0ec879i0",
+            "subject": "Re: [i4j Forum] Re: [PCI-C] natural monopolies and internet Google.",
+            "title": "Cross-Cultural and Multilingual AI Tools",
+            "author": "David Michaelis",
+            "medium": "email",
+            "source": "PCI-Community-Calls (PCI-C)",
+            "tags": ["AI", "Collaboration", "Empowerment"],
+            "date": "12 Sep 2024 19:32:18 -0700"
+        },
+        {
+            "id": "d2436db6144b1fa5974285f1972fd196d27954b07033743f95db9c08a8ea0e77i0",
+            "subject": "Re: [i4j Forum] Re: [PCI-C] natural monopolies and internet Google.",
+            "title": "Digital Cognitive Pathways and Metaweb Evolution",
+            "medium": "email",
+            "source": "PCI-Community-Calls (PCI-C)",
+            "author": "Daveed Benjamin",
+            "tags": ["Metaweb", "Interfaces", "Transparency"],
+            "date": "13 Sep 2024 08:23:09 -0700"
+        },
+        {
+            "id": "b36e9ebc12029aae158c9ada879003ded7f455d62fe33887082aad8d97427198i0",
+            "subject": "Re: [i4j Forum] Re: [PCI-C] natural monopolies and internet Google.",
+            "reply-to": "01edf3bd00e45332d94cdb0c525b977b803028609d9bcb95b7064ee79f308b74i0",
+            "title": "Recognizing and Rewarding Contributions in the Metaweb",
+            "medium": "email",
+            "source": "PCI-Community-Calls (PCI-C)",
+            "author": "Daveed Benjamin",
+            "tags": ["Metaweb", "Transparency", "Collaboration"],
+            "date": "13 Sep 2024 08:39:53 -0700"        },
+        {
+            "id": "5a01482ab569384d0cd136b07918a959f302e344ce73e42c85d79dbe48e5b13ai0",
+            "title": "The Desirable Properties of a Meta-Layer",
+            "author": "Bridgit DAO",
+            "source": "Google Doc",
+            "tags": ["Metaweb", "Data", "Collaboration", "Decentralization", "AI"],
+            "date": "18 Sep 2024 15:00:00 -0700" 
+        },
+        {
+            "id": "9182f057a1b48857989ccb7eb4997bdf4c63af44c2ffdfc6b3421726bf58d6a8i0",
+            "title": "The Primary Use Cases of a Meta-Layer",
+            "author": "Bridgit DAO",
+            "source": "Google Doc",
+            "tags": ["Metaweb", "Collaboration", "Data", "AI", "Meta-communities"],
+            "date": "18 Sep 2024 18:00:00 -0700" 
+        },
+        {
+            "id": "bd1b3b51d59b293cb9812f8774fd6eaf982d0612005b3cad5f6866f21cad4fa9i0",
+            "title": "Call for Ideas: Help Shape the Future of the Web",
+            "subject": "[PCI-C] Call for Ideas: Help Shape the Future of the Web",
+            "medium": "email",
+            "source": "PCI-Community-Calls (PCI-C)",
+            "author": "Daveed Benjamin",
+            "tags": ["Metaweb", "Decentralization", "Collaboration"],
+            "date": "04 Oct 2024 14:10:10 -0700"
+        },
+        {
+            "id": "0d1c4cde15bb242f7a40aa35d70c22ecc3674b0292c9ca383c0810a9c5c251b9i0",
+            "title": "AI and Humanity's Deepest Problems: Love and Compassion",
+            "medium": "email",
+            "source": "PCI-Community-Calls (PCI-C)",
+            "author": "Cindy Mason",
+            "tags": ["Metaweb", "Decentralization", "Collaboration", "AI"],
+            "date": "13 Oct 2024 08:27:02 -0700"        
+        },
+        {
+            "id": "5044b4840e261ffc5be10a78d8696530af82d4c5abf5f4d14cff37cc78d2e4eei0",
+            "title": "Fostering Serendipitous Digital Connections through the Meta-Layer",
+            "subject": "Re: [PCI-C] The Morning: What the A.I. Nobels teach us about humanity",
+            "medium": "email",
+            "source": "PCI-Community-Calls (PCI-C)",
+            "author": "Daveed Benjamin",
+            "tags": ["Metaweb", "Collaboration", "Impact", "Collective Intelligence"],
+            "date": "15 Oct 2024 10:23:02 -0700"        
+        },
+        {
+            "id": "6f6cdef64abafe3189619dd70d375415cea89d401c6b794aed2ca31fbf1413dbi0",
+            "title": "Navigating Existential Threats with AGI and Meta-Frameworks",
+            "subject": "[PCI-C] Join Us for Meta-Layer Working Sessions @mdash; Let's Shape the Future of the Web Together",
+            "medium": "email",
+            "source": "PCI-Community-Calls (PCI-C)",
+            "author": "Paul Werbos",
+            "tags": ["AI", "Sustainability", "Governance", "Impact"],
+            "date": "18 Oct 2024 07:26:38 -0700"
+        },
+        {
+            "id": "0bbbc6353606a289626a63622bed44a7e0db5c03ac74e8a2517d07ff03741053i0",
+            "title": "Human-Centered AI: A Critical Perspective",
+            "medium": "email",
+            "source": "PCI-Community-Calls (PCI-C)",
+            "author": "Cindy Mason",
+            "tags": ["AI", "Privacy", "Ethics", "Data"],
+            "date": "25 Oct 2024 08:36:38 -0700"
+        },
+        {
+            "id": "97f70fcc11adaef1d6ebeb4b68d7724f4bfaf64141083d2b896fdc7d9934dfe8i0",
+            "title": "Legal Liabilities in the Meta-Layer",
+            "medium": "email",
+            "source": "PCI-Community-Calls (PCI-C)",
+            "author": "Brian Donohue",
+            "tags": ["Metaweb", "Legal", "Governance"],
+            "date": "28 Oct 2024 06:04:38 -0700"
+        },
+        {
+            "id": "0d89c52f64ae2f27c9964ecce23a6489870775f54cefe578a26daf8cfef23773i0",
+            "title": "Strategic Opportunity for Internet Reform with New Leadership",
+            "subject": "Elevating the Need to Fix the Internet: A Strategic Opportunity with the Changing of the Guard",
+            "medium": "email",
+            "source": "PCI-Community-Calls (PCI-C)",
+            "author": "Daveed Benjamin",
+            "tags": ["Internet Evolution", "Governance", "Privacy"],
+            "date": "28 Oct 2024 16:18:38 -0700"
+        },
+        {
+            "id": "51dc7f7968e2990ee787d45a9dbf8e214b5aeb45953b3a84da3ef4d349f9f30ei0",
+            "reply-to": "0d89c52f64ae2f27c9964ecce23a6489870775f54cefe578a26daf8cfef23773i0",
+            "subject": "Elevating the Need to Fix the Internet: A Strategic Opportunity with the Changing of the Guard",
+            "title": "Ensuring Balance and Preventing Weaponization of Principles",
+            "medium": "email",
+            "source": "PCI-Community-Calls (PCI-C)",
+            "author": "David Bray, PhD",
+            "tags": ["Governance", "Transparency", "Metaweb","Security"],
+            "date": "28 Oct 2024 17:05:01 -0700"
+        },
+        {
+            "id": "b21a18d510d75a38f9229732f58cc0a15baa9e9046d4fd47b71282365d450c9ai0",
+            "reply-to": "0d89c52f64ae2f27c9964ecce23a6489870775f54cefe578a26daf8cfef23773i0",   
+            "subject": "Elevating the Need to Fix the Internet: A Strategic Opportunity with the Changing of the Guard",
+            "title": "Preserving Real History and Strengthening Cybersecurity",
+            "medium": "email",
+            "source": "PCI-Community-Calls (PCI-C)",
+            "author": "Paul Werbos",
+            "tags": ["Security", "Transparency", "Governance"],
+            "date": "29 Oct 2024 11:01:01 -0700"
+        },
+        {
+            "id": "11fa295164ccec36dedae4346943e4334baca93d0b3e55bff9516ecb7069540ei0",   
+            "reply-to": "51dc7f7968e2990ee787d45a9dbf8e214b5aeb45953b3a84da3ef4d349f9f30ei0",
+            "subject": "Elevating the Need to Fix the Internet: A Strategic Opportunity with the Changing of the Guard",
+            "title": "Designing a Balanced Meta-Layer to Prevent Principle Weaponization",
+            "medium": "email",
+            "source": "PCI-Community-Calls (PCI-C)",
+            "author": "Daveed Benjamin",
+            "tags": ["Metaweb", "Governance", "Privacy"],
+            "date": "29 Oct 2024 12:42:01 -0700"
+        },
+        {
+            "id": "69051ea36631092d6e726fa9dcb41acf84e9deb557960a010bbe628f37ffd35di0",
+            "reply-to": "0d89c52f64ae2f27c9964ecce23a6489870775f54cefe578a26daf8cfef23773i0",
+            "title": "Critique of Decentralization and Bitcoin in Meta-Layer Principles",
+            "subject": "Elevating the Need to Fix the Internet: A Strategic Opportunity with the Changing of the Guard",
+            "medium": "email",
+            "source": "PCI-Community-Calls (PCI-C)",
+            "author": "Dave Troy",
+            "tags": ["Bitcoin", "Decentralization", "Governance", "Financial Systems"],
+            "date": "29 Oct 2024 14:18:01 -0700"
+        },
+        {
+            "id": "a145b6c41574bdbedccce2c740a25e09656445bfd6a9924e1b8d55980271caebi0",
+            "reply-to": "0d89c52f64ae2f27c9964ecce23a6489870775f54cefe578a26daf8cfef23773i0",
+            "subject": "Elevating the Need to Fix the Internet: A Strategic Opportunity with the Changing of the Guard",
+            "title": "Incorporating Security and Privacy in the Meta-Layer",
+            "medium": "email",
+            "source": "PCI-Community-Calls (PCI-C)",
+            "author": "Vandana Upadhyay",
+            "tags": ["Metaweb", "Privacy", "Security"],
+            "date": "29 Oct 2024 17:18 -0700"
+        },
+        {
+            "id": "eefa98bf93d8d4313f83ff3e22cbf61989229caf6915c4e3d4ac4afecad94b28i0",
+            "reply-to": "a145b6c41574bdbedccce2c740a25e09656445bfd6a9924e1b8d55980271caebi0",
+            "subject": "Elevating the Need to Fix the Internet: A Strategic Opportunity with the Changing of the Guard",
+            "title": "Customizable Software Agents for Security and Privacy",
+            "medium": "email",
+            "source": "PCI-Community-Calls (PCI-C)",
+            "author": "Cindy Mason",
+            "tags": ["Privacy", "Security", "AI"],
+            "date": "29 Oct 2024 21:40:01 -0700"
+        },
+        {
+            "id": "71561a0deaa717e581f063bebc6fefb35773bfeca26a6dadb900ee87ee63bfeai0",
+            "reply-to": "69051ea36631092d6e726fa9dcb41acf84e9deb557960a010bbe628f37ffd35di0",
+            "title": "Preserving Open Letters with Bitcoin Ordinals",
+            "subject": "Elevating the Need to Fix the Internet: A Strategic Opportunity with the Changing of the Guard",
+            "medium": "email",
+            "source": "PCI-Community-Calls (PCI-C)",
+            "author": "Daveed Benjamin",
+            "tags": ["Bitcoin", "Metadata", "Transparency","Metaweb", "Blockchain", "Impact", "Governance", "Digital Artifacts"],
+            "date": "29 Oct 2024 20:09:01 -0700"
+        },
+        {
+            "id": "2642be9222683a9c6457fb85a0a24a951449332f982e5057a6062554a24e9928i0",
+            "reply-to": "0d89c52f64ae2f27c9964ecce23a6489870775f54cefe578a26daf8cfef23773i0",
+            "title": "Visualizing Customizable Software Agents as Guardrails",
+            "subject": "Elevating the Need to Fix the Internet: A Strategic Opportunity with the Changing of the Guard",
+            "medium": "email",
+            "source": "PCI-Community-Calls (PCI-C)",
+            "author": "Cindy Mason",
+            "tags": ["Privacy", "Security", "Interfaces"],
+            "date": "29 Oct 2024 21:41:38 -0700"
+        },
+        {
+            "id": "6bf626d256cf3917841e4ee6bc50e870c8143786bbbcbd85a204161228ef6bdci0",
+            "replyTo": "2642be9222683a9c6457fb85a0a24a951449332f982e5057a6062554a24e9928i0",
+            "title": "Security and Privacy as Pillars of the Meta-Layer",
+            "subject": "Elevating the Need to Fix the Internet: A Strategic Opportunity with the Changing of the Guard",
+            "medium": "email",
+            "source": "PCI-Community-Calls (PCI-C)",
+            "author": "Daveed Benjamin",
+            "tags": ["Metaweb", "Privacy", "Security", "Decentralization", "Digital Identity","Data"],
+            "date": "18 Oct 2024 07:26:38 -0700"
+        },
+        {
+            "id": "da222e60b194f116ee33241791da522971764e7e0f4f993887ff1b44a93a814di0",
+            "reply-to": "5a01482ab569384d0cd136b07918a959f302e344ce73e42c85d79dbe48e5b13ai0",
+            "title": "Juxtaposing Perspectives: A Shadow Document Approach",
+            "source": "Google Doc",
+            "author": "Quincey El (Presbyter)",
+            "tags": ["Governance"],
+            "date": "18 Oct 2024 07:26:38 -0700"
+        },
+        {
+            "id": "41b5ea02ed344cacfe828595491ca224f2e487052447b7d004c62ab323a1b6c4i0",
+            "title": "Help Shape the Future of the Web",
+            "author": "Bridgit DAO",
+            "tags": ["Metaweb", "Collaboration", "Data", "Transparency"],
+            "replace": [ 
+                { 
+                    "this": "Jan. 31st",
+                    "with": "June 30th"
+                },
+                { 
+                    "this": "January 31st",
+                    "with": "June 30th"
+                }
+            ]
+        },
+        {
+            "id": "7c15d859d71fed6f2a31bdde7d11c0d16eefe4a580b31b9d9507dee401e3e082i0",
+            "reply-to": "41b5ea02ed344cacfe828595491ca224f2e487052447b7d004c62ab323a1b6c4i0",
+            "title": "How to Create a BRC333 Inscription",
+            "author": "Bridgit DAO",
+            "tags": ["Bitcoin", "Metaweb", "Blockchain"]
+        }
+    ]
+};
+        // Start the satplication
+        document.addEventListener('DOMContentLoaded', initSatplication);
+
+    </script>
+</body>
+</html>

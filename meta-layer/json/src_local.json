@@ -1,0 +1,14 @@
+{   
+    "protocol": "BRC333",
+    "operation": "source",
+    "description": "The scripts and JSON configuration data inscriptions that govern the NatGoblins satplication, which is powered by BRC333.",
+    "sources":  [
+        { "script": "Oracle", "src": "https://natowls.xyz/brc333oracle.js","backup": null },
+        { "script": "TimeTravel", "src": "https://natowls.xyz/brc333timetravel.js", "backup": null },
+        { "script": "Docs", "src": "https://natowls.xyz/brc333docs.js", "backup": null },
+        { "script": "UI", "src": "https://natowls.xyz/brc333ui.js", "backup": null },
+        { "layout": "meta-layer", "sat": 170632059526992, "skip": 0, "backup": "30edf1df44bcda73a9b707d469d8c898a910abc87f26021198864f63a4ca8fcai0" },
+        { "articles": "meta-layer", "sat": 1742692208323708, "skip": 0, "backup": "6cba77a3d13f5bb212aceb6037219ec428457594ff01df4293d8b2b2593cd73fi0" }, 
+        { "system": "meta-layer", "sat": 1742692208391632, "skip": 0, "backup": "02a988518017447a81c73c214dcc140503d7ba75ca6112b97d3375f90885b7e6i0" }
+    ]
+}
