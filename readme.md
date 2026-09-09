@@ -236,3 +236,9 @@ Licensed under the **MIT License**.
 ## **Credits**
 
 Special thanks to **Shiftshapr** and the BRC333 community for building the NatGoblin satplication.
+
+---
+
+## Project relationship
+
+BRC333 is a separate protocol and studio project initiated by Bridgit DAO. It supports durable on-chain publishing and related artifacts. It is connected to the broader Meta-Layer ecosystem through shared use cases and collaboration, while remaining distinct from the Meta-Layer Initiative and its programs.
